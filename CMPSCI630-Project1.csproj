@@ -24,6 +24,9 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="bytecode.ts" />
+    <TypeScriptCompile Include="interpreter.ts" />
+    <TypeScriptCompile Include="PyObject.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">

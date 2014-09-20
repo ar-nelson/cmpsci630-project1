@@ -1,9 +1,12 @@
 ﻿ 
-module Python {
+module Python.Bin {
 
-  // Instruction names and documentation were copied from:
-  // https://docs.python.org/2/library/dis.html
-
+  /**
+   * Python bytecode instruction codes.
+   *
+   * Instruction names and documentation were copied from:
+   * https://docs.python.org/2/library/dis.html
+   */
   export enum Opcode {
 
     /** Indicates end-of-code to the compiler, not used by the interpreter. */
@@ -511,5 +514,167 @@ module Python {
     
     /** Not documented. */
     MAP_ADD = 147
+  }
+
+  /**
+   * Type indicator chars from the Python bytecode format.
+   *
+   * Names and documentation copied from:
+   * http://daeken.com/2010-02-20_Python_Marshal_Format.html
+   */
+  export enum Type {
+
+    /**
+     * Used to null-terminate dictionaries and to represent the serialization of a null object
+     * internally (not sure if this can happen or not).
+     */
+    NULL = 0x30, // 0
+
+    /** Represents the `None` object. */
+    NONE = 0x4E, // N
+
+    /** Represents the `False` object. */
+    FALSE = 0x46, // F
+
+    /** Represents the `True` object. */
+    TRUE = 0x54, // T
+
+    /** Represents the `StopIteration` exception object. */
+    STOPITER = 0x53, // S
+
+    /** Represents the `Ellipsis` object. */
+    ELLIPSIS = 0x2E, // .
+
+    /** Represents an `int` on a 32-bit machine. Stored as an `int32`. */
+    INT = 0x69, // i
+
+    /**
+     * Represents an `int` on a 64-bit machine. Stored as an `int64`. When read on a 32-bit
+     * machine, this may automatically become a `long` (if it's above `2**31`).
+     */
+    INT64 = 0x49, // I
+
+    /** 
+     * Represents a `float` in the old (< 1) marshal format. Stored as a string with a `uint8`
+     * before it indicating the size.
+     */
+    FLOAT = 0x66, // f
+    
+    /** Represents a `float` in the new marshal format. Stored as a `float64`. */
+    BINARY_FLOAT = 0x67, // g
+
+    /**
+     * Represents a `complex` in the old (< 1) marshal format. Contains the real and imaginary
+     * components stored like `FLOAT`; that is, as strings.
+     */
+    COMPLEX = 0x78, // x
+
+    /** 
+     * Represents a `complex` in the new marshal format. Stored as two `float64`s representing the
+     * real and imaginary components.
+     */
+    BINARY_COMPLEX = 0x79, // y
+
+    /** Represents a `long`. Haven't yet figured out how this works. */
+    LONG = 0x6C, // l
+
+    /** 
+     * Represents a `str`. Stored as a `int32` representing the size, followed by that many bytes.
+     */
+    STRING = 0x73, //s
+
+    /** 
+     * Represents a `str`. Identical to `STRING`, with the exception that it's added to an
+     * "interned" list as well.
+     */
+    INTERNED = 0x74, //t
+
+    /**
+     * Represents a `str`. Stored as a `int32` reference into the interned list mentioned above.
+     * Note that this is zero-indexed.
+     */
+    STRINGREF = 0x52, // R
+
+    /**
+     * Represents a `unicode`. Stored as a `int32` representing the size, followed by that many
+     * bytes. This is always UTF-8.
+     */
+    UNICODE = 0x75, // u
+
+    /**
+     * Represents a `tuple`. Stored as a `int32` followed by that many objects, which are
+     * marshalled as well.
+     */
+    TUPLE = 0x28, // (
+    
+    /** Represents a `list`. Stored identically to `TUPLE`. */
+    LIST = 0x5B, // [
+
+    /**
+     * Represents a `dict`. Stored as a series of marshalled key-value pairs. At the end of the
+     * dict, you'll have a "key" that consists of a `NULL`; there's no value following it.
+     */
+    DICT = 0x7B, // {
+
+    /** Represents a `frozenset`. Stored identically to `TUPLE`. */
+    FROZENSET = 0x3E, // >
+
+    /** A code object, which represents a function. */
+    CODE = 0x63 // c
+  }
+
+  export interface Object {
+    type: Type
+  }
+
+  export interface String extends Object {
+    str: string
+  }
+
+  export interface Sequence extends Object {
+    items: Object[]
+  }
+
+  /** 
+   * A binary code object.
+   *
+   * Names and documentation copied from:
+   * http://daeken.com/2010-02-20_Python_Marshal_Format.html
+   */
+  export interface CodeObject extends Object {
+    /** Number of arguments. */
+    argcount: number
+    /** Number of local variables. */
+    nlocals: number
+    /** Max stack depth used. */
+    stacksize: number
+    /** Flags for the function. See the `Bin.CodeFlag` enum. */
+    flags: number
+    /** The bytecode of the function, as [opcode, arg] pairs. */
+    code: number[][]
+    /** Tuple of constants used. */
+    consts: Sequence
+    /** Tuple of names. */
+    names: Sequence
+    /** Tuple of variable names (this includes areguments and locals). */
+    varnames: Sequence
+    /** Tuple of free variables (meaning unclear). */
+    freevars: Sequence
+    /** Tuple of variables used in nested functions. */
+    cellvars: Sequence
+    /** String containing the original filename this code object was generated from. */
+    filename: String
+    /** Name of the function. If it's the top level code object in a .pyc, this will be <module>.*/
+    name: String
+    /** First line number of the code this code object was generated from. */
+    firstlineno: number
+    /** String mapping bytecode offsets to line numbers. */
+    lnotab: String
+  }
+
+  export enum CodeFlag {
+    HAS_VARARGS  = 0x04,
+    HAS_KWARGS   = 0x08,
+    IS_GENERATOR = 0x20
   }
 }
