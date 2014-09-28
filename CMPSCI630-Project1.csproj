@@ -26,9 +26,11 @@
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="bytecode.ts" />
     <TypeScriptCompile Include="interpreter.ts" />
+    <TypeScriptCompile Include="pyc-parser.ts" />
     <TypeScriptCompile Include="PyObject.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="pyc\example1.pyc" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>

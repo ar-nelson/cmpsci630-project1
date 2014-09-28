@@ -1,28 +1,16 @@
-﻿class Greeter {
-    element: HTMLElement;
-    span: HTMLElement;
-    timerToken: number;
-
-    constructor(element: HTMLElement) {
-        this.element = element;
-        this.element.innerHTML += "The time is: ";
-        this.span = document.createElement('span');
-        this.element.appendChild(this.span);
-        this.span.innerText = new Date().toUTCString();
-    }
-
-    start() {
-        this.timerToken = setInterval(() => this.span.innerHTML = new Date().toUTCString(), 500);
-    }
-
-    stop() {
-        clearTimeout(this.timerToken);
-    }
-
-}
+﻿
+var filename = "pyc/example1.pyc"
 
 window.onload = () => {
-    var el = document.getElementById('content');
-    var greeter = new Greeter(el);
-    greeter.start();
-};
+  var parser = new Python.Bin.Parser()
+  console.log("Loading binary data from " + filename + "...")
+  var xhr = new XMLHttpRequest()
+  xhr.open('GET', filename, true)
+  xhr.responseType = 'arraybuffer'
+
+  xhr.onload = function (e) {
+    console.dir(parser.parse(this.response))
+  }
+
+  xhr.send()
+}

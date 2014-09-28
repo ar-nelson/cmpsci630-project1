@@ -516,6 +516,9 @@ module Python.Bin {
     MAP_ADD = 147
   }
 
+  /** Opcodes >= this have an argument. */
+  export var HAVE_ARGUMENT = 90
+
   /**
    * Type indicator chars from the Python bytecode format.
    *
@@ -581,13 +584,13 @@ module Python.Bin {
     /** 
      * Represents a `str`. Stored as a `int32` representing the size, followed by that many bytes.
      */
-    STRING = 0x73, //s
+    STRING = 0x73, // s
 
     /** 
      * Represents a `str`. Identical to `STRING`, with the exception that it's added to an
      * "interned" list as well.
      */
-    INTERNED = 0x74, //t
+    INTERNED = 0x74, // t
 
     /**
      * Represents a `str`. Stored as a `int32` reference into the interned list mentioned above.
@@ -627,12 +630,26 @@ module Python.Bin {
     type: Type
   }
 
-  export interface String extends Object {
+  export interface StringObject extends Object {
     str: string
   }
 
-  export interface Sequence extends Object {
+  export interface NumberObject extends Object {
+    n: number
+  }
+
+  export interface ComplexObject extends Object {
+    real: number
+    imag: number
+  }
+
+  export interface SequenceObject extends Object {
     items: Object[]
+  }
+
+  export interface DictObject extends Object {
+    keys: Object[]
+    values: Object[]
   }
 
   /** 
@@ -653,23 +670,23 @@ module Python.Bin {
     /** The bytecode of the function, as [opcode, arg] pairs. */
     code: number[][]
     /** Tuple of constants used. */
-    consts: Sequence
+    consts: Object[]
     /** Tuple of names. */
-    names: Sequence
+    names: Object[]
     /** Tuple of variable names (this includes areguments and locals). */
-    varnames: Sequence
+    varnames: Object[]
     /** Tuple of free variables (meaning unclear). */
-    freevars: Sequence
+    freevars: Object[]
     /** Tuple of variables used in nested functions. */
-    cellvars: Sequence
+    cellvars: Object[]
     /** String containing the original filename this code object was generated from. */
-    filename: String
+    filename: string
     /** Name of the function. If it's the top level code object in a .pyc, this will be <module>.*/
-    name: String
+    name: string
     /** First line number of the code this code object was generated from. */
     firstlineno: number
     /** String mapping bytecode offsets to line numbers. */
-    lnotab: String
+    lnotab: string
   }
 
   export enum CodeFlag {
