@@ -176,7 +176,7 @@ module Python.Bin {
         if (!Opcode[opcode]) {
           throw ParseError("Unrecognized opcode: " + opcode, this.offset+5+i)
         } else if (opcode >= HAVE_ARGUMENT) {
-          instrs.push([opcode, data.getUint16(this.offset+5+i)])
+          instrs.push([opcode, data.getUint16(this.offset+6+i, true)])
           i += 2
         } else {
           instrs.push([opcode])
