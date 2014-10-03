@@ -55,7 +55,7 @@ print "Original string: " + str;
 print "Default expanded tab: " +  str.expandtabs();
 print "Double expanded tab: " +  str.expandtabs(16);
 
-str1 = "this is string example";
+str1 = "this is a string example";
 str2 = "exam";
 print "find",str2,"in",str1
 print "exam found at index ",str1.find(str2);
@@ -71,9 +71,9 @@ str1='101'
 print "is the string 101 entirely composed of digits?",str1.isdigit()
 
 str = "THis"; 
-print "THis entirely lower?",str.islower();
+print str,"is entirely lower?",str.islower();
 str="this"
-print "this entirely lower?",str.islower();
+print str,"is entirely lower?",str.islower();
 
 print "toying with unicode"
 str = u"this2009";  
@@ -84,19 +84,19 @@ print str.isnumeric();
 print "isspace function"
 str = "       "; 
 print str.isspace();
-str = "This is string example";
+str = "This is a string example";
 print str.isspace();
 
 print "istitle function"
-str = "This Is String Example";
+str = "This Is a String Example";
 print str, "is ",str.istitle();
-str = "This is string example";
+str = "This is a string example";
 print str, "is ",str.istitle();
 
 print "isupper function"
-str = "THIS IS STRING EXAMPLE....WOW"; 
+str = "THIS IS STRING EXAMPLE"; 
 print str, "is ",str.isupper();
-str = "THIS is string example....wow";
+str = "THIS is string example";
 print str,"is ",str.isupper();
 
 print "join function"
@@ -104,14 +104,14 @@ str = "-";
 seq = ("a", "b", "c"); # This is sequence of strings.
 print str.join( seq );
 
-str = "this is string example....wow";
+str = "this is string example";
 print "Length of the string",str,"is", len(str);
 
 print "left justifying with padding"
 print str.ljust(50, '0');
 
 print "convert to lower case"
-str = "THIS IS STRING EXAMPLE....WOW";
+str = "THIS IS STRING EXAMPLE";
 print str.lower();
 
 print "stripping characters from the beginning"
@@ -125,41 +125,41 @@ from string import maketrans   # Required to call maketrans function.
 intab = "aeiou"
 outtab = "12345"
 trantab = maketrans(intab, outtab)
-str = "this is string example....wow!!!";
+str = "this is a string example";
 print str.translate(trantab);
 
-str = "this is really a string example....wow!";
+str = "this is really a string example";
 print "Max character: " + max(str);
-str = "this is a string example....wow!!!";
+str = "this is a string example";
 print "Max character: " + max(str);
 
-str = "this-is-a-string-example....wow!!!";
+str = "this-is-a-string-example";
 print "Min character: " + min(str);
 
 print "replace"
-str = "this is string example....wow!!! this is really string";
+str = "this is a string example. This is really a string";
 print str.replace("is", "was");
 print str.replace("is", "was", 3);
 
 print "find and index backwards"
-str = "this is really a string example....wow!!!";
+str = "this is really a string example";
 str1 = "is";
 print str.rfind(str1);
 print str.rfind(str1, 0, 10);
 print str.rfind(str1, 10, 0);
-str1 = "this is string example....wow!!!";
+str1 = "this is a string example";
 str2 = "is";
 print str1.rindex(str2);
 print str1.index(str2);
 
-print"right justification"
-str = "this is string example....wow!!!";
+print "right justification"
+str = "this is a string example";
 print str.rjust(50, '0');
 
 print "stripping from end of string"
-str = "     this is string example....wow!!!     ";
+str = "     this is a string example     ";
 print str.rstrip();
-str = "88888888this is string example....wow!!!8888888";
+str = "88888888this is a string example8888888";
 print str.rstrip('8');
 
 print "split function"
@@ -176,24 +176,24 @@ print str.splitlines( 4 );
 print str.splitlines( 5 );
 
 print "startswith function"
-str = "this is string example....wow!!!";
+str = "this is a string example";
 print str.startswith( 'this' );
 print str.startswith( 'is', 2, 4 );
 print str.startswith( 'this', 2, 4 );
 
 print "strip from both sides"
-str = "0000000this is string example....wow!!!0000000";
+str = "0000000this is string example0000000";
 print str.strip( '0' );
 
 print "swap case"
-str = "this is string example....wow!!!";
+str = "this is a string example";
 print str.swapcase();
-str = "THIS IS STRING EXAMPLE....WOW!!!";
+str = "THIS IS A STRING EXAMPLE";
 print str.swapcase();
 
 
 print "title-ize"
-str = "this is string example....wow!!!";
+str = "this is a string example";
 print str.title();
 
 print "translate with delete"
