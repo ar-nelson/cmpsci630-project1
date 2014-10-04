@@ -673,7 +673,7 @@ module Python.Bin {
     consts: Object[]
     /** Tuple of names. */
     names: Object[]
-    /** Tuple of variable names (this includes areguments and locals). */
+    /** Tuple of variable names (this includes arguments and locals). */
     varnames: Object[]
     /** Tuple of free variables (meaning unclear). */
     freevars: Object[]
