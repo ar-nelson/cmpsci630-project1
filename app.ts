@@ -25,19 +25,11 @@ function parse(data: ArrayBuffer) {
   var out = document.getElementById("outputbox")
   try {
     out.setAttribute("class", "")
-    out.textContent = JSON.stringify(parser.parse(data), replacer, 2)
+    out.textContent = JSON.stringify(parser.parse(data), null, 2)
   } catch (err) {
     displayError(err)
   }
-  function replacer(key, value) {
-       if (value in Python.Bin.Opcode) {
-            if (value >= Python.Bin.HAVE_ARGUMENT) {
-                return Python.Bin.Opcode[value]+" has argument "
-            }
-            return Python.Bin.Opcode[value]
-            }
-           return value
-}
+ 
 }
 function displayError(err: any) {
   var out = document.getElementById("outputbox")
