@@ -3,19 +3,32 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>PYC Parser Test</title>
+    <title>CMPSCI 630 PYC Parser</title>
     <link rel="stylesheet" href="app.css" type="text/css" />
     <script src="bytecode.js"></script>
     <script src="pyc-parser.js"></script>
     <script src="app.js"></script>
 </head>
 <body>
-    <h1>PYC Parser Test</h1>
-
-    <p>By Adam Nelson and Arpita Raveendran</p>
-
-    <p>REQUIRES XHRv2 (<a href="http://caniuse.com/#feat=xhr2">compatibility</a>); won't work in IE <= 9!</p>
-
-    <p>Output will be printed to JS console.</p>
+    <h1>CMPSCI 630 PYC Parser</h1>
+    <p class="authors">Adam Nelson and Arpita Raveendran</p>
+    <div class="ui">
+        <div class="leftcol">
+            <section class="s-output">
+                <h2>Parser Output</h2>
+                <code id="outputbox">Select a file, and output will be displayed here.</code>
+            </section>
+        </div>
+        <div class="rightcol">
+            <section class="s-filelist">
+                <h2>Test Files</h2>
+                <ul id="filelist"></ul>
+            </section>
+            <section class="s-fileupload">
+                <h2>Upload a <code>.pyc</code> File</h2>
+                <input type="file" id="fileupload" name="fileupload" />
+            </section>
+        </div>
+    </div>
 </body>
 </html>

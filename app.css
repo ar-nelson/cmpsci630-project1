@@ -1,7 +1,114 @@
 ﻿body {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI', 'Lucida Grande', 'Trebuchet MS', sans-serif;
+    font-size: 12pt;
+    color: #000000;
+    background-color: #cccccc;
 }
 
-span {
-    font-style: italic;
+h1 {
+    font-size: 24pt;
+    font-weight: normal;
+    color: #008800;
+    text-align: center;
+}
+
+h2 {
+    font-size: 18pt;
+    font-weight: normal;
+    color: #008800;
+}
+
+code, #filelist {
+    font-family: 'Source Code Pro', Consolas, Monaco, Menlo, 'Courier New', monospace;
+}
+
+.authors {
+    font-size: 10pt;
+    font-weight: bold;
+    margin-top: -1em;
+    margin-bottom: 2em;
+    text-align: center;
+}
+
+.ui {
+    position: relative;
+    width: 100%;
+    height: 640px;
+    background-color: #bbddbb;
+    border-top: 2px solid #008800;
+    border-bottom: 2px solid #008800;
+}
+
+.leftcol {
+    position: relative;
+    width: 46%;
+    height: 96%;
+    padding: 2%;
+    float: left;
+}
+
+.rightcol {
+    position: relative;
+    width: 46%;
+    height: 96%;
+    padding: 2%;
+    float: left;
+}
+
+.s-output {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.s-filelist {
+    position: relative;
+    height: 70%;
+    width: 100%;
+}
+
+.s-fileupload {
+    position: relative;
+    height: 30%;
+    width: 100%;
+}
+
+#outputbox {
+    display: block;
+    width: 98%;
+    height: 480px;
+    padding: 1%;
+    font-size: 10pt;
+    background-color: #ffffff;
+    border: 1px inset #888888;
+    overflow: scroll;
+    white-space: pre;
+}
+
+.error {
+    color: #880000;
+}
+
+#filelist {
+    width: 98%;
+    height: 340px;
+    padding: 1%;
+    font-size: 10pt;
+    background-color: #ffffff;
+    border: 1px inset #888888;
+    list-style-type: none;
+    overflow: auto;
+}
+
+#filelist li {
+    cursor: pointer;
+}
+
+#filelist li:hover {
+    background-color: #008800;
+    color: #ffffff;
+}
+
+#fileupload {
+
 }
