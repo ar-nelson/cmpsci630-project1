@@ -25,7 +25,7 @@ function parse(data: ArrayBuffer) {
   var out = document.getElementById("outputbox")
   try {
     out.setAttribute("class", "")
-    out.textContent = JSON.stringify(parser.parse(data), null, 2)
+    out.textContent = stringifyCodeObject(parser.parse(data))
   } catch (err) {
     displayError(err)
   }
