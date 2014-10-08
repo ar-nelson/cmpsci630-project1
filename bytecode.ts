@@ -694,4 +694,260 @@ module Python.Bin {
     HAS_KWARGS   = 0x08,
     IS_GENERATOR = 0x20
   }
+  
+  export function stringifyCodeObject(object: Object, indent: string = "   "): string
+    {
+        var s: string = ""
+            switch (object.type) {
+            case Python.Bin.Type.CODE: {
+                var codeobject: CodeObject = <CodeObject> object
+                //argcount component of codeobject
+                s = s +indent+"[\n"+indent+"*argcount*: " + codeobject.argcount
+                //nlocals component
+                s = s + "\n"+indent+"*nlocals*: " + codeobject.nlocals
+                //stacksize component
+                s = s + "\n"+indent+"*stacksize*: " + codeobject.stacksize
+                //flags component
+                s = s + "\n"+indent+"*flags*: " + codeobject.flags
+                //code component
+                s = s + "\n"+indent+"*Code*:\n"                 
+                for (var i = 0; i < codeobject.code.length; i++)
+                {
+                    s = s + indent + Opcode[codeobject.code[i][0]] + " "
+                    if (codeobject.code[i][0] >= Python.Bin.HAVE_ARGUMENT) { s = s + codeobject.code[i][1] + "\n" }
+                    else { s = s + "\n" }
+
+                }
+                //consts component
+                s = s + "\n" + indent + "*consts*:\n"
+              
+                for (var j = 0; j < codeobject.consts.length; j++) {
+
+                    var t: string = stringifyCodeObject(codeobject.consts[j], indent+"    ")
+                    s=s+indent+t+"\n"
+                }
+                //names component 
+                s = s + "\n" + indent + "*names*:\n"
+                
+                for (var i = 0; i < codeobject.names.length; i++)
+                {
+                    
+                    var t: string = stringifyCodeObject(codeobject.names[i], indent+"    ")
+                    s=s+indent+t+"\n"
+
+                }
+                //varnames component
+                s = s + "\n"+indent+"*varnames*:\n"
+               
+                for (var i = 0; i < codeobject.varnames.length; i++) {
+                   
+                    var t:string=stringifyCodeObject(codeobject.varnames[i],indent+"    ")
+                    s=s+indent+t+"\n"
+
+                }
+               //freevars component
+                s = s + "\n"+indent+"*freevars*:\n"
+                
+                for (var j = 0; j < codeobject.freevars.length; j++) {
+                    
+                    var t: string = stringifyCodeObject(codeobject.freevars[j], indent+"    ")
+                    s=s+indent+t+"\n"
+                }
+               
+                //cellvars component
+                s = s + "\n"+indent+"*cellvars*:\n"
+                
+                for (var j = 0; j < codeobject.cellvars.length; j++) {
+                   
+                    var t: string = stringifyCodeObject(codeobject.cellvars[j], indent+"    ")
+                    s=s+indent+t+"\n"
+
+
+                }
+                
+                 //filename component
+                
+                s=s+"\n"+indent+"*filename*: "+codeobject.filename
+                //name component 
+                s = s + "\n"+indent+"*name*: " + codeobject.name
+                //firstlineno component
+                s = s+"\n"+indent+"*firstlineno*: " + codeobject.firstlineno
+                //lnotab component
+                s=s+"\n"+indent+"*lnotab*: "+codeobject.lnotab+"\n"+indent+"]"
+
+
+               return s
+
+            }
+
+            case Python.Bin.Type.STRING:
+                {
+                   var stringob: StringObject = <StringObject>object
+                    return stringob.str
+
+                }
+            case Python.Bin.Type.INT:
+                {
+                    var numberob: NumberObject = <NumberObject> object
+                    return ""+numberob.n
+
+                }
+                case Python.Bin.Type.FALSE: {
+
+
+                   return "" + false
+                   
+
+
+
+                }
+                case Python.Bin.Type.TRUE: {
+
+                    return ""+true
+                }
+
+                case Python.Bin.Type.FLOAT: {
+
+                    var numberobj : NumberObject = <NumberObject>object
+                    return ""+numberobj.n
+
+                }
+
+                case Python.Bin.Type.COMPLEX: {
+
+                    var complexob: ComplexObject = <ComplexObject> object
+                    return "real: "+complexob.real+" imag: "+complexob.imag
+
+                }
+                case Python.Bin.Type.BINARY_COMPLEX: {
+
+
+                    var bincomplexob: ComplexObject = <ComplexObject> object
+                    return "real: "+bincomplexob.real+" imag: "+complexob.imag
+
+
+                }
+                case Python.Bin.Type.BINARY_FLOAT: {
+
+                    var binfloat: NumberObject = <NumberObject> object
+                    return ""+binfloat.n
+                }
+                case Python.Bin.Type.LONG: {
+
+                    var longob: NumberObject = <NumberObject> object
+                    return ""+longob.n
+
+
+                }
+                case Python.Bin.Type.NONE: {
+
+                    return Type[Python.Bin.Type.NONE]
+                }
+                case Python.Bin.Type.STRINGREF: {
+
+                    var stringobj: StringObject = <StringObject>object
+                    return stringobj.str
+
+
+
+                }
+
+                case Python.Bin.Type.INT64: {
+                    var int64ob: NumberObject = <NumberObject> object
+                    return "" + int64ob.n
+
+
+                }
+                case Python.Bin.Type.INTERNED: {
+
+                    var stringobject: StringObject = <StringObject>object
+                    return stringobject.str
+
+
+                }
+                case Python.Bin.Type.UNICODE: {
+
+
+                    var unicodeob: NumberObject = <NumberObject> object
+                    return "" + unicodeob.n
+                    
+
+
+                }
+
+
+                case Python.Bin.Type.LIST: {
+
+
+                    var listob: SequenceObject = <SequenceObject>object
+                    var st: string = ""
+                  
+                    for (var i = 0; i < listob.items.length; i++) {
+
+                        var tem:string= "" +stringifyCodeObject(listob.items[i], indent)
+                        st=st+indent+tem+"\n"
+                    }
+                    return st
+
+
+                }
+                case Python.Bin.Type.TUPLE: {
+
+                    var str: string = ""
+                    
+                    var tupleob: SequenceObject = <SequenceObject>object
+                    for (var i = 0; i < tupleob.items.length; i++) {
+
+                        var temp:string="" + stringifyCodeObject(tupleob.items[i], indent)
+                        str=str+indent+temp+"\n"
+                 }
+                    return str
+                }
+                case Python.Bin.Type.FROZENSET: {
+                    var strin: string = ""
+                    
+                    var frozenob: SequenceObject = <SequenceObject>object
+                    for (var i = 0; i < frozenob.items.length; i++) {
+
+                        var temp:string="" + stringifyCodeObject(frozenob.items[i], indent)
+                        strin=strin+indent+temp+"\n"
+                 }
+                    return strin
+                }
+
+
+                case Python.Bin.Type.DICT: {
+                    var pairs: string = ""
+                   
+                    var dictob: DictObject = <DictObject> object
+                    for (var j = 0, i = 0; j < dictob.keys.length, i < dictob.values.length; j++, i++) {
+
+                        var temp:string="" + stringifyCodeObject(dictob.keys[j], indent) + "|" + stringifyCodeObject(dictob.values[i], indent )
+                        pairs=pairs+indent+temp+"\n"
+                    }
+                    return pairs
+                }
+        }
+    }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 }
