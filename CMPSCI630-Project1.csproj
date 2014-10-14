@@ -26,8 +26,16 @@
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="bytecode.ts" />
     <TypeScriptCompile Include="interpreter.ts" />
+    <TypeScriptCompile Include="PyBoolean.ts" />
     <TypeScriptCompile Include="pyc-parser.ts" />
+    <TypeScriptCompile Include="PyCodeObject.ts" />
+    <TypeScriptCompile Include="PyConstants.ts" />
+    <TypeScriptCompile Include="PyDict.ts" />
+    <TypeScriptCompile Include="PyNumbers.ts" />
     <TypeScriptCompile Include="PyObject.ts" />
+    <TypeScriptCompile Include="PySequences.ts" />
+    <TypeScriptCompile Include="PyString.ts" />
+    <TypeScriptCompile Include="unmarshaller.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="pyc\example1.pyc" />

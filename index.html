@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="app.css" type="text/css" />
     <script src="bytecode.js"></script>
     <script src="pyc-parser.js"></script>
+    <script src="PyObject.js"></script>
+    <script src="PyConstants.js"></script>
+    <script src="PyNumbers.js"></script>
+    <script src="PyString.js"></script>
+    <script src="PySequences.js"></script>
+    <script src="PyDict.js"></script>
+    <script src="PyCodeObject.js"></script>
+    <script src="unmarshaller.js"></script>
+    <script src="interpreter.js"></script>
     <script src="app.js"></script>
 </head>
 <body>
@@ -16,7 +25,12 @@
         <div class="leftcol">
             <section class="s-output">
                 <h2>Parser Output</h2>
-                <code id="outputbox">Select a file, and output will be displayed here.</code>
+                <ul class="tabbar">
+                    <li class="tab selectedtab" id="outputtab">Output</li>
+                    <li class="tab" id="bytecodetab">Bytecode</li>
+                </ul>
+                <div class="output" id="outputbox"><samp>Select a file, and output will be displayed here.</samp></div>
+                <code class="output hidden" id="bytecodebox">Select a file, and bytecode will be displayed here.</code>
             </section>
         </div>
         <div class="rightcol">

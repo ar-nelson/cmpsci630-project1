@@ -133,6 +133,15 @@ module Python.Bin {
       }
     }
 
+    private toStrings(seq: Object[]): string[] {
+      var result: string[] = []
+      for (var i = 0; i < seq.length; i++) {
+        if (seq[i].hasOwnProperty("str")) result.push((<any>seq[i]).str)
+        else throw ParseError("Expected String; got " + Type[seq[i].type] + ".",  this.offset)
+      }
+      return result
+    }
+
     private parseCodeObject(data: DataView): CodeObject {
       console.debug("Parsing code object at 0x" + this.offset.toString(16))
       return {
@@ -143,10 +152,10 @@ module Python.Bin {
         flags: this.readUint32(data),
         code: this.parseInstructionString(data),
         consts: this.checkType(data, Type.TUPLE).parseSequence(data),
-        names: this.checkType(data, Type.TUPLE).parseSequence(data),
-        varnames: this.checkType(data, Type.TUPLE).parseSequence(data),
-        freevars: this.checkType(data, Type.TUPLE).parseSequence(data),
-        cellvars: this.checkType(data, Type.TUPLE).parseSequence(data),
+        names: this.toStrings(this.checkType(data, Type.TUPLE).parseSequence(data)),
+        varnames: this.toStrings(this.checkType(data, Type.TUPLE).parseSequence(data)),
+        freevars: this.toStrings(this.checkType(data, Type.TUPLE).parseSequence(data)),
+        cellvars: this.toStrings(this.checkType(data, Type.TUPLE).parseSequence(data)),
         filename: this.checkType(data, Type.STRING).parseString(data).str,
         name: this.checkType(data, Type.STRING).parseString(data).str,
         firstlineno: this.readUint32(data),

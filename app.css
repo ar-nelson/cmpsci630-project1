@@ -18,7 +18,7 @@ h2 {
     color: #008800;
 }
 
-code, #filelist {
+code, samp, #filelist {
     font-family: 'Source Code Pro', Consolas, Monaco, Menlo, 'Courier New', monospace;
 }
 
@@ -73,20 +73,58 @@ code, #filelist {
     width: 100%;
 }
 
-#outputbox {
+.tabbar {
+    display: block;
+    width: 100%;
+    height: 28px;
+    padding: 0;
+    margin: 0;
+    background-color: #88aa88;
+    list-style-type: none;
+    overflow: hidden;
+}
+
+.tab {
+    display: block;
+    float: left;
+    height: 24px;
+    padding: 2px 12px;
+    color: #aaaaaa;
+    background-color: #004400;
+    cursor: pointer;
+}
+
+.tab.selectedtab {
+    color: #ffffff;
+    background-color: #008800;
+}
+
+.output {
     display: block;
     width: 98%;
-    height: 480px;
+    height: 460px;
     padding: 1%;
     font-size: 10pt;
     background-color: #ffffff;
     border: 1px inset #888888;
     overflow: scroll;
+}
+
+#bytecodebox {
+    white-space: pre;
+}
+
+samp {
+    display: block;
     white-space: pre;
 }
 
 .error {
     color: #880000;
+}
+
+.info {
+    color: #888888;
 }
 
 #filelist {
@@ -112,3 +150,8 @@ code, #filelist {
 #fileupload {
 
 }
+
+.hidden {
+    display: none;
+}
+

@@ -672,13 +672,13 @@ module Python.Bin {
     /** Tuple of constants used. */
     consts: Object[]
     /** Tuple of names. */
-    names: Object[]
+    names: string[]
     /** Tuple of variable names (this includes arguments and locals). */
-    varnames: Object[]
+    varnames: string[]
     /** Tuple of free variables (meaning unclear). */
-    freevars: Object[]
+    freevars: string[]
     /** Tuple of variables used in nested functions. */
-    cellvars: Object[]
+    cellvars: string[]
     /** String containing the original filename this code object was generated from. */
     filename: string
     /** Name of the function. If it's the top level code object in a .pyc, this will be <module>.*/
@@ -732,7 +732,7 @@ module Python.Bin {
                 for (var i = 0; i < codeobject.names.length; i++)
                 {
                     
-                    var t: string = stringifyCodeObject(codeobject.names[i], indent+"    ")
+                    var t: string = codeobject.names[i]
                     s=s+indent+t+"\n"
 
                 }
@@ -741,7 +741,7 @@ module Python.Bin {
                
                 for (var i = 0; i < codeobject.varnames.length; i++) {
                    
-                    var t:string=stringifyCodeObject(codeobject.varnames[i],indent+"    ")
+                    var t:string=codeobject.varnames[i]
                     s=s+indent+t+"\n"
 
                 }
@@ -750,7 +750,7 @@ module Python.Bin {
                 
                 for (var j = 0; j < codeobject.freevars.length; j++) {
                     
-                    var t: string = stringifyCodeObject(codeobject.freevars[j], indent+"    ")
+                    var t: string = codeobject.freevars[j]
                     s=s+indent+t+"\n"
                 }
                
@@ -759,7 +759,7 @@ module Python.Bin {
                 
                 for (var j = 0; j < codeobject.cellvars.length; j++) {
                    
-                    var t: string = stringifyCodeObject(codeobject.cellvars[j], indent+"    ")
+                    var t: string = codeobject.cellvars[j]
                     s=s+indent+t+"\n"
 
 
@@ -929,25 +929,5 @@ module Python.Bin {
                 }
         }
     }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
 }
+
