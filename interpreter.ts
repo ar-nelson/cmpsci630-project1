@@ -3,22 +3,41 @@ module Python {
   interface StackFrame {
     pc: number
     code: PyCodeObject
+    blockStack: Block[]
   }
+
+  enum BlockType {
+    FUNCTION, LOOP, TRY
+  }
+
+  interface Block {
+    type: BlockType
+    end: number
+    locals: { [name: string]: PyObject }
+  }
+
+  export var interpreter: Interpreter = null
 
   export class Interpreter {
     private pc: number = 0
     private stack: PyObject[] = []
     private code: PyCodeObject
     private codeStack: StackFrame[] = []
-    private locals: { [name: string]: PyObject } = {}
-    private localsStack: { [name: string]: PyObject }[] = [this.locals]
+    private block: Block
+    private blockStack: Block[] = []
     private globals: { [name: string]: PyObject } = {}
 
     constructor(code: Bin.CodeObject, public importer?: Importer, public printer?: Printer) {
       this.code = <any>unmarshalObject(code)
+      this.block = {
+        type: BlockType.FUNCTION,
+        end: code.code.byteLength,
+        locals: {}
+      }
     }
 
     exec(): void {
+      interpreter = this
       while (true) {
         while (this.pc < this.code.code.byteLength) {
           var instr = this.code.code.getUint8(this.pc++)
@@ -34,8 +53,24 @@ module Python {
           var nextFrame = this.codeStack.pop()
           this.pc = nextFrame.pc
           this.code = nextFrame.code
+          this.blockStack = nextFrame.blockStack
+          this.block = this.blockStack.pop()
         }
       }
+      interpreter = null
+    }
+
+    pushCode(newCode: PyCodeObject, newLocals: { [name: string]: PyObject }): void {
+      this.blockStack.push(this.block)
+      this.codeStack.push({
+        pc: this.pc, code: this.code, blockStack: this.blockStack
+      })
+      this.pc = 0
+      this.code = newCode
+      this.block = {
+        type: BlockType.FUNCTION, end: newCode.code.byteLength, locals: newLocals
+      }
+      this.blockStack = []
     }
 
     private execInstr(opcode: Bin.Opcode, arg?: number): void {
@@ -190,20 +225,21 @@ module Python {
             return
           } else {
             // Pop the function stack.
-            this.locals = this.localsStack.pop()
             var codeTos = this.codeStack.pop()
             this.code = codeTos.code
             this.pc = codeTos.pc
+            this.blockStack = codeTos.blockStack
+            this.block = this.blockStack.pop()
           }
           break
 
         // TODO: Several more instrs, randomly inserted between these...
 
         case Bin.Opcode.STORE_NAME:
-          this.locals[this.code.names[arg]] = stack.pop()
+          this.block.locals[this.code.names[arg]] = stack.pop()
           break
         case Bin.Opcode.DELETE_NAME:
-          delete this.locals[this.code.names[arg]]
+          delete this.block.locals[this.code.names[arg]]
           break
 
         case Bin.Opcode.STORE_ATTR:
@@ -223,8 +259,8 @@ module Python {
           break
         case Bin.Opcode.LOAD_NAME:
           name = this.code.names[arg]
-          if (Object.prototype.hasOwnProperty.call(this.locals, name)) {
-            stack.push(this.locals[name])
+          if (Object.prototype.hasOwnProperty.call(this.block.locals, name)) {
+            stack.push(this.block.locals[name])
           } else if (Object.prototype.hasOwnProperty.call(this.globals, name)) {
             // FIXME: Should it actually be trying globals?
             stack.push(this.globals[name])
@@ -276,6 +312,43 @@ module Python {
           } else {
             throw Errors.nameError("global name '" + name + "' is not defined")
           }
+          break
+          
+        case Bin.Opcode.LOAD_FAST:
+          name = this.code.varnames[arg]
+          if (Object.prototype.hasOwnProperty.call(this.block.locals, name)) {
+            stack.push(this.block.locals[name])
+          } else {
+            throw Errors.nameError("name '" + name + "' is not defined")
+          }
+          break
+        case Bin.Opcode.STORE_FAST:
+          this.block.locals[this.code.varnames[arg]] = stack.pop()
+          break
+        case Bin.Opcode.DELETE_FAST:
+          delete this.block.locals[this.code.varnames[arg]]
+          break
+
+        case Bin.Opcode.CALL_FUNCTION:
+          var nargs: number = arg & 0xff // low byte
+          var nkwargs: number = (arg & 0xff00) >> 8 // high byte
+          var args: PyObject[] = [], kwkeys: PyObject[] = [], kwvalues: PyObject[] = []
+          for (var i = 0; i < nkwargs; i++) {
+            kwvalues.push(stack.pop())
+            kwkeys.push(stack.pop())
+          }
+          for (var i = 0; i < nargs; i++) args.unshift(stack.pop())
+          res = stack.pop().call(new PyTuple(args),
+            nkwargs > 0 ? new PyDict(kwkeys, kwvalues) : null)
+          if (res !== null) stack.push(res)
+          break
+        case Bin.Opcode.MAKE_FUNCTION:
+          tos = stack.pop()
+          if (!(tos instanceof PyCodeObject)) throw Errors.typeError(
+            "function can only be created from a code object")
+          var defaults: PyObject[] = []
+          for (var i = 0; i < arg; i++) defaults.push(stack.pop())
+          stack.push(new PyFunction(<PyCodeObject>tos, defaults))
           break
 
         default:

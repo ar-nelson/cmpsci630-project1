@@ -6,6 +6,8 @@ module Python {
     ]
     length = 0
 
+    constructor() {}
+
     hasKey(key: PyObject): boolean {
       var bucket = this.buckets[key.hash() % this.buckets.length]
       for (var i = 0; i < bucket.length; i++) {

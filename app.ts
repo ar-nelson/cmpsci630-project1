@@ -67,9 +67,17 @@ window.onload = () => {
     }
     try {
       printSpecialOutput("Loaded " + JSON.stringify(codeObject.name) + ".", "info")
+      var spaceNeeded = false
       var interpreter = new Python.Interpreter(codeObject, null, {
-        print: (str: string) => currentOutput.textContent += str,
-        printNewline: () => currentOutput.textContent += '\n',
+        print: (str: string) => {
+          if (spaceNeeded) currentOutput.textContent += ' '
+          currentOutput.textContent += str
+          spaceNeeded = true
+        },
+        printNewline: () => {
+          currentOutput.textContent += '\n'
+          spaceNeeded = false
+        },
         printReturnValue: (value: Python.PyObject) => {
           printSpecialOutput("RESULT: " + value.repr()[Python.strData], "return")
         }
