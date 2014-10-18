@@ -4,6 +4,8 @@ module Python {
     LT, LE, EQ, NE, GT, GE
   }
 
+  export var compOpSymbols = ['<', '<=', '==', '!=', '>', '>=']
+
   export module Errors {
     // Stub methods intended to generate built-in error classes.
     // Another file should replace these with functions that generate actual
@@ -19,6 +21,9 @@ module Python {
     }
     export var keyError: (message: string) => any = (message) => {
       return new Error("KeyError: " + message)
+    }
+    export var nameError: (message: string) => any = (message) => {
+      return new Error("NameError: " + message)
     }
   }
 
@@ -148,7 +153,9 @@ module Python {
       else return (<any>this).repr()
     }
     repr(): PyObject {
-      return this.callMethodObjArgs("__repr__")
+      if (this.hasAttrString("__repr__")) return this.callMethodObjArgs("__repr__")
+      else return new PyString("<'" + (<any>this).type.name + "' object at 0x" +
+        this.id.toString(16) + ">")
     }
     isInstance(cls: PyObject): boolean {
       return (<any>this).type.isSubclass(cls.type)
@@ -165,10 +172,10 @@ module Python {
       if (!args.hasOwnProperty(seqData)) throw Errors.typeError("args must be a tuple or list")
       if ((<any>this).type.hasAttr(name)) {
         var method: PyObject = (<any>this).type.getAttr(name)
-        return method.call(args, kw)
+        return method.call(new PyTuple([<any>this].concat(args.seqValue)), kw)
       } else {
         var method: PyObject = (<any>this).getAttr(name)
-        return method.call(new PyTuple([<any>this].concat(args)), kw)
+        return method.call(args, kw)
       }
     }
     callMethodObjArgs(name: string, ...args: PyObject[]): PyObject {
@@ -389,17 +396,22 @@ module Python {
     methods: {[key: string]: Function}
   ): PyTypeObject {
     var newMethods: {[key: string]: BuiltinMethod} = {}
-    for (var mname in methods) if (methods.hasOwnProperty(mname)) {
+    function buildMethod(mname: string) {
       var oldFunc = methods[mname]
       newMethods[mname] = new BuiltinMethod(name, mname, (args: SequenceLikeObject, kw?: DictLikeObject) => {
         if (kw && kw.isTrue()) throw Errors.typeError("method " + mname +
           " doesn't take keyword arguments")
         if (args.seqValue.length === oldFunc.length) {
           return oldFunc.apply(null, args.seqValue)
-        } else throw Errors.typeError("expected " + oldFunc.length + " arguments, got " +
+        } else {
+          console.log(mname)
+          console.dir(args)
+          throw Errors.typeError(mname + " expected " + oldFunc.length + " arguments, got " +
           args.seqValue.length)
+        }
       })
     }
+    for (var mname in methods) if (methods.hasOwnProperty(mname)) buildMethod(mname)
     return new PyTypeObject(name, true, new DictProxy(newMethods), bases)
   }
 }
