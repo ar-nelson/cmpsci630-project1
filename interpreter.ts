@@ -248,6 +248,27 @@ module Python {
           stack.push(res)
           break
 
+        case Bin.Opcode.JUMP_FORWARD:
+          this.pc += arg
+          break
+        case Bin.Opcode.JUMP_IF_FALSE_OR_POP:
+          tos = stack.pop()
+          if (!tos.isTrue()) { stack.push(tos); this.pc = arg }
+          break
+        case Bin.Opcode.JUMP_IF_TRUE_OR_POP:
+          tos = stack.pop()
+          if (tos.isTrue()) { stack.push(tos); this.pc = arg }
+          break
+        case Bin.Opcode.JUMP_ABSOLUTE:
+          this.pc = arg
+          break
+        case Bin.Opcode.POP_JUMP_IF_FALSE:
+          if (!stack.pop().isTrue()) this.pc = arg
+          break
+        case Bin.Opcode.POP_JUMP_IF_TRUE:
+          if (stack.pop().isTrue()) this.pc = arg
+          break
+
         case Bin.Opcode.LOAD_GLOBAL:
           name = this.code.names[arg]
           if (Object.prototype.hasOwnProperty.call(this.globals, name)) {
