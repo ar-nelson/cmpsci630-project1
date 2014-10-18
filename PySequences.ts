@@ -31,27 +31,31 @@ module Python {
 
   export class PySet extends PyInstanceBase implements PyObject {
     type = Types.SetType
+    private hashMap = new ObjectHashMap()
 
     constructor(initialContents: PyObject[]) { 
       super() 
-      // TODO: Implement HashMap and use it to store set's contents
+      for (var i = 0; i < initialContents.length; i++) {
+        this.hashMap.put(initialContents[i], initialContents[i])
+      }
     }
     isTrue() {
-      // TODO: Return false if empty
-      return true
+      return this.hashMap.length > 0
     }
   }
 
   export class PyFrozenSet extends PyInstanceBase implements PyObject {
     type = Types.SetType
+    private hashMap = new ObjectHashMap()
 
     constructor(contents: PyObject[]) {
       super()
-      // TODO: Implement HashMap and use it to store set's contents
+      for (var i = 0; i < contents.length; i++) {
+        this.hashMap.put(contents[i], contents[i])
+      }
     }
     isTrue() {
-      // TODO: Return false if empty
-      return true
+      return this.hashMap.length > 0
     }
   }
 }

@@ -8,18 +8,31 @@ module Python {
 
   export class PyDict extends PyInstanceBase implements DictLikeObject {
     type = Types.DictType
+    private hashMap = new ObjectHashMap()
 
     constructor(keys: PyObject[], values: PyObject[]) {
       super()
-      // TODO: Implement HashMap and use it to store dict's contents
+      for (var i = 0; i < keys.length; i++) {
+        this.hashMap.put(keys[i], values[i])
+      }
     }
     hasItem(key: PyObject): boolean {
-      // TODO: Implement me
-      return false
+      return this.hashMap.hasKey(key)
+    }
+    getItem(key: PyObject): PyObject {
+      return this.hashMap.get(key)
+    }
+    setItem(key: PyObject, value: PyObject): boolean {
+      return this.hashMap.put(key, value) !== null
+    }
+    deleteItem(key: PyObject): boolean {
+      return this.hashMap.remove(key) !== null
     }
     isTrue() {
-      // TODO: Return false if empty
-      return true
+      return this.hashMap.length > 0
+    }
+    entries() {
+      return this.hashMap.entries()
     }
   }
 }

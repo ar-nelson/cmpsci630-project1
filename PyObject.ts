@@ -100,6 +100,7 @@ module Python {
 
   export interface DictLikeObject extends PyObject {
     hasItem(key: PyObject): boolean
+    entries(): PyObject[][]
   }
 
   export class PyObjectBase {
@@ -371,17 +372,25 @@ module Python {
     isSubclass(cls: PyObject) {return false}
     isTrue() {return true }
     hasItem(key: PyObject) {
-      if (key.hasOwnProperty(strData)) return this.contents.hasOwnProperty(key[strData])
+      if (key.hasOwnProperty(strData))
+        return Object.prototype.hasOwnProperty.call(this.contents, key[strData])
       else return false
     }
     getItem(key: PyObject) {
       if (key.hasOwnProperty(strData)) {
         var str: string = key[strData]
-        if (this.contents.hasOwnProperty(str)) return this.contents[str]
+        if (Object.prototype.hasOwnProperty.call(this.contents, str)) return this.contents[str]
       }
       throw Errors.keyError(key.repr()[strData])
     }
     isTypeObject() {return false}
+    entries(): PyObject[][] {
+      var entries: PyObject[][] = []
+      for (var kstr in this.contents) if (Object.prototype.hasOwnProperty.call(kstr)) {
+        entries.push([pythonifyString(kstr), this.contents[kstr]])
+      }
+      return entries
+    }
   }
 
   export module Types {

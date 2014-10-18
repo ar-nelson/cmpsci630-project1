@@ -25,6 +25,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="bytecode.ts" />
+    <TypeScriptCompile Include="hashmap.ts" />
     <TypeScriptCompile Include="interpreter.ts" />
     <TypeScriptCompile Include="pyc-parser.ts" />
     <TypeScriptCompile Include="PyCodeObject.ts" />
