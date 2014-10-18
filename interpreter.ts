@@ -3,17 +3,18 @@ module Python {
   interface StackFrame {
     pc: number
     code: PyCodeObject
+    locals: { [name: string]: PyObject }
     blockStack: Block[]
   }
 
   enum BlockType {
-    FUNCTION, LOOP, TRY
+    FUNCTION, LOOP, EXCEPT, FINALLY, WITH
   }
 
   interface Block {
     type: BlockType
+    start: number
     end: number
-    locals: { [name: string]: PyObject }
   }
 
   export var interpreter: Interpreter = null
@@ -23,22 +24,23 @@ module Python {
     private stack: PyObject[] = []
     private code: PyCodeObject
     private codeStack: StackFrame[] = []
-    private block: Block
-    private blockStack: Block[] = []
+    private locals: { [name: string]: PyObject } = {}
+    private blockStack: Block[]
     private globals: { [name: string]: PyObject } = {}
+    private unwinding = false
 
     constructor(code: Bin.CodeObject, public importer?: Importer, public printer?: Printer) {
       this.code = <any>unmarshalObject(code)
-      this.block = {
+      this.blockStack = [{
         type: BlockType.FUNCTION,
+        start: 0,
         end: code.code.byteLength,
-        locals: {}
-      }
+      }]
     }
 
     exec(): void {
       interpreter = this
-      while (true) {
+      try {
         while (this.pc < this.code.code.byteLength) {
           var instr = this.code.code.getUint8(this.pc++)
           var arg: number = null
@@ -46,34 +48,60 @@ module Python {
             arg = this.code.code.getUint16(this.pc, true)
             this.pc += 2
           }
-          this.execInstr(instr, arg)
+          if (this.execInstr(instr, arg)) return
         }
-        if (this.codeStack.length === 0) break
-        else {
-          var nextFrame = this.codeStack.pop()
-          this.pc = nextFrame.pc
-          this.code = nextFrame.code
-          this.blockStack = nextFrame.blockStack
-          this.block = this.blockStack.pop()
-        }
+        throw Error("Reached end of code without a RETURN_VALUE")
+      } finally {
+        interpreter = null
       }
-      interpreter = null
     }
 
     pushCode(newCode: PyCodeObject, newLocals: { [name: string]: PyObject }): void {
-      this.blockStack.push(this.block)
+      if (this.codeStack.length >= 128) throw new Error("stack overflow")
       this.codeStack.push({
-        pc: this.pc, code: this.code, blockStack: this.blockStack
+        pc: this.pc, code: this.code, locals: this.locals, blockStack: this.blockStack
       })
       this.pc = 0
       this.code = newCode
-      this.block = {
-        type: BlockType.FUNCTION, end: newCode.code.byteLength, locals: newLocals
-      }
-      this.blockStack = []
+      this.locals = newLocals
+      this.blockStack = [{
+        type: BlockType.FUNCTION, start: 0, end: newCode.code.byteLength
+      }]
     }
 
-    private execInstr(opcode: Bin.Opcode, arg?: number): void {
+    private popCode() {
+      if (this.codeStack.length === 0) throw new Error("stack underflow")
+      var nextStackFrame = this.codeStack.pop()
+      this.code = nextStackFrame.code
+      this.pc = nextStackFrame.pc
+      this.locals = nextStackFrame.locals
+      this.blockStack = nextStackFrame.blockStack
+    }
+
+    private unwindTo(type: BlockType, exception?: any): Block {
+      while (this.blockStack.length > 0) {
+        var block = this.blockStack.pop()
+        if (block.type === type) return block
+        else if (block.type === BlockType.FINALLY) {
+          this.pc = block.end
+          this.unwinding = true
+          this.exec()
+          this.unwinding = false
+        }
+      }
+      if (exception) {
+        if (this.codeStack.length > 0) {
+          this.popCode()
+          return this.unwindTo(type, exception)
+        } else {
+          throw exception
+        }
+      } else {
+        throw new Error("expected, but did not find, enclosing block of type " + BlockType[type])
+      }
+    }
+
+    private execInstr(opcode: Bin.Opcode, arg?: number): boolean {
       var stack = this.stack
       var tos: PyObject, tos1: PyObject, tos2: PyObject, tos3: PyObject, res: PyObject
       var op: string, rop: string, opsym: string, name: string
@@ -192,6 +220,11 @@ module Python {
 
         // TODO: Slice operations
 
+        case Bin.Opcode.STORE_MAP:
+          tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop()
+          tos2.setItem(tos, tos1)
+          stack.push(tos2)
+          break
         case Bin.Opcode.STORE_SUBSCR:
           tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop()
           tos1.setItem(tos, tos2)
@@ -209,9 +242,15 @@ module Python {
         case Bin.Opcode.PRINT_NEWLINE:
           this.printer.printNewline()
           break
-
-        // TODO: BREAK_LOOP, CONTINUE_LOOP
-
+        case Bin.Opcode.BREAK_LOOP:
+          var block = this.unwindTo(BlockType.LOOP)
+          this.pc = block.end
+          break
+        case Bin.Opcode.CONTINUE_LOOP:
+          var block = this.unwindTo(BlockType.LOOP)
+          this.pc = block.start
+          this.blockStack.push(block)
+          break
         case Bin.Opcode.LIST_APPEND:
           stack[stack.length - arg].callMethodObjArgs("append", stack.pop())
           break
@@ -222,24 +261,25 @@ module Python {
           if (this.codeStack.length === 0) {
             // End of program. Print the returned value.
             if (this.printer) this.printer.printReturnValue(stack.pop())
-            return
-          } else {
-            // Pop the function stack.
-            var codeTos = this.codeStack.pop()
-            this.code = codeTos.code
-            this.pc = codeTos.pc
-            this.blockStack = codeTos.blockStack
-            this.block = this.blockStack.pop()
-          }
+            interpreter = null
+            return true
+          } else this.popCode()
           break
 
         // TODO: Several more instrs, randomly inserted between these...
 
+        case Bin.Opcode.POP_BLOCK:
+          this.blockStack.pop()
+          break
+        case Bin.Opcode.END_FINALLY:
+          if (this.unwinding) return true
+          else throw Error("encountered END_FINALLY outside of a finally block")
+
         case Bin.Opcode.STORE_NAME:
-          this.block.locals[this.code.names[arg]] = stack.pop()
+          this.locals[this.code.names[arg]] = stack.pop()
           break
         case Bin.Opcode.DELETE_NAME:
-          delete this.block.locals[this.code.names[arg]]
+          delete this.locals[this.code.names[arg]]
           break
 
         case Bin.Opcode.STORE_ATTR:
@@ -259,8 +299,8 @@ module Python {
           break
         case Bin.Opcode.LOAD_NAME:
           name = this.code.names[arg]
-          if (Object.prototype.hasOwnProperty.call(this.block.locals, name)) {
-            stack.push(this.block.locals[name])
+          if (Object.prototype.hasOwnProperty.call(this.locals, name)) {
+            stack.push(this.locals[name])
           } else if (Object.prototype.hasOwnProperty.call(this.globals, name)) {
             // FIXME: Should it actually be trying globals?
             stack.push(this.globals[name])
@@ -313,20 +353,28 @@ module Python {
             throw Errors.nameError("global name '" + name + "' is not defined")
           }
           break
-          
+        case Bin.Opcode.SETUP_LOOP:
+          this.blockStack.push({type: BlockType.LOOP, start: this.pc, end: this.pc + arg})
+          break
+        case Bin.Opcode.SETUP_EXCEPT:
+          this.blockStack.push({type: BlockType.EXCEPT, start: this.pc, end: this.pc + arg})
+          break
+        case Bin.Opcode.SETUP_FINALLY:
+          this.blockStack.push({type: BlockType.FINALLY, start: this.pc, end: this.pc + arg})
+          break
         case Bin.Opcode.LOAD_FAST:
           name = this.code.varnames[arg]
-          if (Object.prototype.hasOwnProperty.call(this.block.locals, name)) {
-            stack.push(this.block.locals[name])
+          if (Object.prototype.hasOwnProperty.call(this.locals, name)) {
+            stack.push(this.locals[name])
           } else {
             throw Errors.nameError("name '" + name + "' is not defined")
           }
           break
         case Bin.Opcode.STORE_FAST:
-          this.block.locals[this.code.varnames[arg]] = stack.pop()
+          this.locals[this.code.varnames[arg]] = stack.pop()
           break
         case Bin.Opcode.DELETE_FAST:
-          delete this.block.locals[this.code.varnames[arg]]
+          delete this.locals[this.code.varnames[arg]]
           break
 
         case Bin.Opcode.CALL_FUNCTION:
@@ -355,6 +403,7 @@ module Python {
           throw new Error("Unimplemented opcode: " +
              (Bin.Opcode[opcode] || "0x" + opcode.toString(16)))
       }
+      return false
     }
   }
 
