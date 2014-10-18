@@ -239,7 +239,7 @@ module Python {
           if (res === NotImplemented) {
             res = tos.richCompare(tos1, arg)
             if (res === NotImplemented) throw Errors.typeError("unsupported operand type(s) for " +
-              compOpSymbols[arg] + ": '" + tos1.type.name + "' and '" + tos.type.name + "'")
+              cmp_op[arg] + ": '" + tos1.type.name + "' and '" + tos.type.name + "'")
             else res = res.callMethodObjArgs("__neg__")
           }
           stack.push(res)

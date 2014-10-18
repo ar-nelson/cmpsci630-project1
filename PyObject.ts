@@ -1,10 +1,10 @@
 ﻿
 module Python {
   export enum PyCompOp {
-    LT, LE, EQ, NE, GT, GE
+    LT, LE, EQ, NE, GT, GE, IN, NOT_IN, IS, IS_NOT, EXCEPTION_MATCH
   }
 
-  export var compOpSymbols = ['<', '<=', '==', '!=', '>', '>=']
+  export var cmp_op = ['<', '<=', '==', '!=', '>', '>=', 'in', 'not in', 'is', 'is not', 'exception match', 'BAD']
 
   export module Errors {
     // Stub methods intended to generate built-in error classes.
@@ -119,6 +119,7 @@ module Python {
     }
     richCompare(o2: PyObject, opid: PyCompOp): PyObject {
       var method: string = null
+      var n1: NumberLikeObject, n2: NumberLikeObject
       switch (opid) {
         case PyCompOp.LT:
           if (this.hasAttrString("__lt__")) method = "__lt__"
@@ -138,10 +139,55 @@ module Python {
         case PyCompOp.GE:
           if (this.hasAttrString("__ge__")) method = "__ge__"
           break
+        case PyCompOp.IN:
+          if (this.hasAttrString("__contains__")) {
+            return this.callMethodObjArgs("__contains__", o2)
+          } else return NotImplemented
+        case PyCompOp.NOT_IN:
+          if (this.hasAttrString("__contains__")) {
+            return this.callMethodObjArgs("__contains__", o2).callMethodObjArgs("__not__")
+          } else return NotImplemented
+        case PyCompOp.IS:
+          n1 = <NumberLikeObject><any>this; n2 = <NumberLikeObject><any>o2
+          if (n1.numberSize !== undefined && n2.numberSize !== undefined && n1.type === n2.type) {
+            switch (n1.numberSize ) {
+              case NumberSize.INT: return Bool(n1.intValue() === n2.intValue())
+              case NumberSize.LONG: // TODO: longs
+              case NumberSize.FLOAT: return Bool(n1.floatValue() === n2.floatValue())
+              case NumberSize.COMPLEX: return Bool(
+                n1.realValue() === n2.realValue() && n1.imagValue() === n2.imagValue())
+            }
+          }
+          return Bool(this === o2)
+        case PyCompOp.IS_NOT:
+          n1 = <NumberLikeObject><any>this; n2 = <NumberLikeObject><any>o2
+          if (n1.numberSize !== undefined && n2.numberSize !== undefined && n1.type === n2.type) {
+            switch (n1.numberSize) {
+              case NumberSize.INT: return Bool(n1.intValue() !== n2.intValue())
+              case NumberSize.LONG: // TODO: longs
+              case NumberSize.FLOAT: return Bool(n1.floatValue() !== n2.floatValue())
+              case NumberSize.COMPLEX: return Bool(
+                n1.realValue() === n2.realValue() && n1.imagValue() !== n2.imagValue())
+            }
+          }
+          return Bool(this !== o2)
+        // TODO: exception match
       }
       if (method) return this.callMethodObjArgs(method, o2)
-      else /* TODO: Use __cmp__ here. */ throw new Error("not yet implemented")
-      // return this.callMethodObjArgs(pythonifyString("__cmp__"), o2)
+      else if (this.hasAttrString("__cmp__")) {
+        var result = this.callMethodObjArgs("__cmp__", o2)
+        if (result === NotImplemented) return NotImplemented
+        var n = (<NumberLikeObject><any>result).intValue()
+        switch (opid) {
+          case PyCompOp.LT: return Bool(n < 0)
+          case PyCompOp.LE: return Bool(n <= 0)
+          case PyCompOp.EQ: return Bool(n == 0)
+          case PyCompOp.NE: return Bool(n != 0)
+          case PyCompOp.GT: return Bool(n > 0)
+          case PyCompOp.GE: return Bool(n >= 0)
+        }
+      }
+      return NotImplemented
     }
     compare(o2: PyObject): number {
       var result = this.callMethodObjArgs("__cmp__", o2)
