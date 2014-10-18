@@ -67,7 +67,13 @@ window.onload = () => {
     }
     try {
       printSpecialOutput("Loaded " + JSON.stringify(codeObject.name) + ".", "info")
-      var interpreter = new Python.Interpreter(codeObject)
+      var interpreter = new Python.Interpreter(codeObject, null, {
+        print: (str: string) => currentOutput.textContent += str,
+        printNewline: () => currentOutput.textContent += '\n',
+        printReturnValue: (value: Python.PyObject) => {
+          printSpecialOutput("RESULT: " + value.repr()[Python.strData], "return")
+        }
+      })
       interpreter.exec()
       printSpecialOutput("Execution complete.", "info")
     } catch (err) {

@@ -127,6 +127,10 @@ samp {
     color: #888888;
 }
 
+.return {
+    color: #000088;
+}
+
 #filelist {
     width: 98%;
     height: 340px;
