@@ -20,11 +20,14 @@ module Python {
 
     exec(): void {
       while (true) {
-        // FIXME: pc might not actually be an index into the code array.
-        // Need to figure out how instructions are numbered.
-        while (this.pc < this.code.code.length) {
-          var instr = this.code.code[this.pc++]
-          this.execInstr(instr[0], instr.length > 1 ? instr[1] : null)
+        while (this.pc < this.code.code.byteLength) {
+          var instr = this.code.code.getUint8(this.pc++)
+          var arg: number = null
+          if (instr >= Bin.HAVE_ARGUMENT) {
+            arg = this.code.code.getUint16(this.pc, true)
+            this.pc += 2
+          }
+          this.execInstr(instr, arg)
         }
         if (this.codeStack.length === 0) break
         else {

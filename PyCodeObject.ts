@@ -13,7 +13,7 @@ module Python {
     hasVarargs: boolean
     hasKwArgs: boolean
     isGenerator: boolean
-    code: number[][]
+    code: DataView
     consts: PyObject[]
     names: string[]
     varnames: string[]

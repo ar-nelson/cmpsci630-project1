@@ -176,21 +176,10 @@ module Python.Bin {
       return this
     }
 
-    private parseInstructionString(data: DataView): number[][] {
+    private parseInstructionString(data: DataView): DataView {
       console.debug("Parsing instruction string at 0x" + this.offset.toString(16))
       var len = data.getUint32(this.offset+1, true)
-      var instrs: number[][] = []
-      for (var i = 0; i < len; i++) {
-        var opcode = data.getUint8(this.offset+5+i)
-        if (!Opcode[opcode]) {
-          throw ParseError("Unrecognized opcode: " + opcode, this.offset+5+i)
-        } else if (opcode >= HAVE_ARGUMENT) {
-          instrs.push([opcode, data.getUint16(this.offset+6+i, true)])
-          i += 2
-        } else {
-          instrs.push([opcode])
-        }
-      }
+      var instrs = new DataView(data.buffer, this.offset+5, len)
       this.offset += len + 5
       return instrs
     }
