@@ -42,7 +42,7 @@ module Python {
 
     private stack() {return this.blockStack[this.blockStack.length - 1].stack}
 
-    constructor(code: Bin.CodeObject, public importer?: Importer, public printer?: Printer) {
+    constructor(code: Bin.CodeObject, public printer?: Printer) {
       this.code = <any>unmarshalObject(code)
       this.blockStack = [{
         type: BlockType.FUNCTION,
@@ -575,14 +575,5 @@ module Python {
     printReturnValue(value: PyObject): void
     /** Prompts the user for input, which will be provided to `callback`. */
     rawInput(callback: (input: string) => void, prompt?: string): void
-  }
-
-  export interface Importer {
-    /**
-     * Attempts to import the module `moduleName`, and calls `callback` with a binary ArrayBuffer
-     * if the import succeeded. The first argument of `callback` is an error, which will be
-     * non-null if the import failed.
-     */
-    importModule(moduleName: string, callback: (err: any, bin: ArrayBuffer) => void): void
   }
 }

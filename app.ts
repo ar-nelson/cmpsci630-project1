@@ -9,12 +9,9 @@ var builtinTestFiles = [
   "listcomprehensions.pyc",
   "listsdictionariestuples.pyc",
   "Logicalop.pyc",
-  "module1.pyc",
-  "module2.pyc",
   "nestedfor.pyc",
   "simplefor.pyc",
   "stringmanipulation.pyc",
-  "usingmodules.pyc",
   "while.pyc"
 ]
 
@@ -103,7 +100,7 @@ window.onload = () => {
     try {
       printSpecialOutput("Loaded " + JSON.stringify(codeObject.filename) + ".", "info")
       var spaceNeeded = false
-      var interpreter = new Python.Interpreter(codeObject, null, {
+      var interpreter = new Python.Interpreter(codeObject, {
         print: (str: string) => {
           if (spaceNeeded) currentOutput.textContent += ' '
           currentOutput.textContent += str
