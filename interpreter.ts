@@ -123,6 +123,8 @@ module Python {
       }]
     }
 
+    pushStackValue(value: PyObject): void {this.stack.push(value)}
+
     private popCode() {
       if (this.codeStack.length === 0) throw new Error("stack underflow")
       var nextStackFrame = this.codeStack.pop()
@@ -521,6 +523,7 @@ module Python {
           for (var i = 0; i < nargs; i++) args.unshift(stack.pop())
           res = stack.pop().call(new PyTuple(args),
             nkwargs > 0 ? new PyDict(kwkeys, kwvalues) : null)
+          if (res === PauseInterpreter) return true
           if (res !== null) stack.push(res)
           break
         case Bin.Opcode.MAKE_FUNCTION:
@@ -547,6 +550,8 @@ module Python {
     printNewline(): void
     /** Prints the final return value of a program. */
     printReturnValue(value: PyObject): void
+    /** Prompts the user for input, which will be provided to `callback`. */
+    rawInput(callback: (input: string) => void, prompt?: string): void
   }
 
   export interface Importer {

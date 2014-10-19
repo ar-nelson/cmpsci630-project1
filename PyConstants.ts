@@ -37,4 +37,7 @@ module Python {
   export var None: PyObject = new NoneInstance()
   export var Ellipsis: PyObject = new EllipsisInstance()
   export var NotImplemented: PyObject = new NotImplementedInstance()
+
+  /** Special value; signals (for raw_input) to stop the interpreter and wait for input. */
+  export var PauseInterpreter: PyObject = new NoneInstance()
 }

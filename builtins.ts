@@ -46,6 +46,14 @@ module Python {
         numbers.push(new PyInt(i))
       return new PyTuple(numbers)
     }, 1, 3),
+    raw_input: new BuiltinFunction('raw_input', (prompt?: PyString) => {
+      var interp = interpreter
+      interp.printer.rawInput((input: string) => {
+        interp.pushStackValue(new PyString(input))
+        interp.exec()
+      }, prompt ? (<StringLikeObject>prompt.str()).strValue : undefined)
+      return PauseInterpreter
+    }, 0, 1),
     sorted: new BuiltinFunction('sorted', (seq: PyObject) => {
       var iter = seq.getIter()
       var list = []

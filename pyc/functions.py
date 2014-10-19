@@ -11,12 +11,14 @@ def closeprogram(prompt, retries=4, complaint='Yes or no, please!'):
         if ok in ('y', 'ye', 'yes'):
             print "Qutting"
             break
-        if ok in ('n', 'no', 'nop', 'nope'):
+        elif ok in ('n', 'no', 'nop', 'nope'):
             print "Not quitting"
             retries=retries-1
+        else:
+            print complaint
         if(retries==0):
-                print "time out"
-                break
+            print "time out"
+            break
 x=add(5,4)
 print x
 closeprogram('Quit?')

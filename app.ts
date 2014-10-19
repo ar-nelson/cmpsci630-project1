@@ -47,6 +47,42 @@ window.onload = () => {
     outputbox.appendChild(currentOutput)
   }
 
+  function requestInput(callback: (input: string) => void, prompt?: string): void {
+    if (prompt) {
+      var promptText = document.createElement("samp")
+      promptText.classList.add("prompt")
+      promptText.textContent = prompt
+      outputbox.appendChild(promptText)
+    }
+    var form = document.createElement("form")
+    form.classList.add("raw_input")
+    var input = document.createElement("input")
+    input.setAttribute("type", "text")
+    input.setAttribute("size", "36")
+    form.appendChild(input)
+    var submit = document.createElement("input")
+    submit.setAttribute("type", "submit")
+    submit.setAttribute("value", ">>>")
+    form.appendChild(submit)
+    outputbox.appendChild(form)
+    form.onsubmit = function (e: Event) {
+      input.setAttribute("disabled", "disabled")
+      setTimeout(() => {
+        try {
+          currentOutput = document.createElement("samp")
+          currentOutput.classList.add("stdout")
+          outputbox.appendChild(currentOutput)
+          callback(input.value)
+        } catch (err) {
+          var errString = "INTERPRETER ERROR\n\n" + err.toString() + (err.stack ?
+            "\n\n" + err.stack.toString() : "")
+          printSpecialOutput(errString, "error")
+        }
+      }, 0)
+      return false
+    }
+  }
+
   function displayParseError(err: any) {
     var errString = "PARSE FAILED\n\n" + err.toString() + (err.stack ?
       "\n\n" + err.stack.toString() : "")
@@ -79,10 +115,10 @@ window.onload = () => {
         },
         printReturnValue: (value: Python.PyObject) => {
           printSpecialOutput("RESULT: " + value.repr()[Python.strData], "return")
-        }
+        },
+        rawInput: requestInput
       })
       interpreter.exec()
-      printSpecialOutput("Execution complete.", "info")
     } catch (err) {
       var errString = "INTERPRETER ERROR\n\n" + err.toString() + (err.stack ?
         "\n\n" + err.stack.toString() : "")

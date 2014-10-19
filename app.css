@@ -18,7 +18,7 @@ h2 {
     color: #008800;
 }
 
-code, samp, #filelist {
+code, samp, #filelist, #outputbox form input {
     font-family: 'Source Code Pro', Consolas, Monaco, Menlo, 'Courier New', monospace;
 }
 
@@ -114,6 +114,10 @@ code, samp, #filelist {
     white-space: pre;
 }
 
+#outputbox form {
+    white-space: nowrap;
+}
+
 samp {
     display: block;
     white-space: pre;
@@ -129,6 +133,10 @@ samp {
 
 .return {
     color: #000088;
+}
+
+.prompt {
+    color: #00cc00;
 }
 
 #filelist {
