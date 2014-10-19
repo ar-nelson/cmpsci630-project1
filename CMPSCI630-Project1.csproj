@@ -32,6 +32,7 @@
     <TypeScriptCompile Include="PyCodeObject.ts" />
     <TypeScriptCompile Include="PyConstants.ts" />
     <TypeScriptCompile Include="PyDict.ts" />
+    <TypeScriptCompile Include="PyExceptions.ts" />
     <TypeScriptCompile Include="PyNumbers.ts" />
     <TypeScriptCompile Include="PyObject.ts" />
     <TypeScriptCompile Include="PySequences.ts" />

@@ -1,25 +1,33 @@
 ﻿
 module Python {
-  interface StackFrame {
+  export interface StackFrame {
+    lastpc: number
     pc: number
     code: PyCodeObject
     locals: { [name: string]: PyObject }
     blockStack: Block[]
   }
 
-  enum BlockType {
+  export enum BlockType {
     FUNCTION, LOOP, EXCEPT, FINALLY, WITH
   }
 
-  interface Block {
+  export interface Block {
     type: BlockType
     start: number
     end: number
   }
 
+  export interface Traceback {
+    tb_next?: Traceback
+    tb_frame: StackFrame
+    tb_lasti: number[]
+  }
+
   export var interpreter: Interpreter = null
 
   export class Interpreter {
+    private lastpc: number = 0
     private pc: number = 0
     private stack: PyObject[] = []
     private code: PyCodeObject
@@ -42,13 +50,20 @@ module Python {
       interpreter = this
       try {
         while (this.pc < this.code.code.byteLength) {
+          this.lastpc = this.pc
           var instr = this.code.code.getUint8(this.pc++)
           var arg: number = null
           if (instr >= Bin.HAVE_ARGUMENT) {
             arg = this.code.code.getUint16(this.pc, true)
             this.pc += 2
           }
-          if (this.execInstr(instr, arg)) return
+          try {
+            if (this.execInstr(instr, arg)) return
+          } catch (ex) {
+            if (ex instanceof PyException) {
+              this.unwindTo(BlockType.EXCEPT, ex)
+            } else throw ex
+          }
         }
         throw Error("Reached end of code without a RETURN_VALUE")
       } finally {
@@ -56,11 +71,44 @@ module Python {
       }
     }
 
+    traceback(): Traceback {
+      var lasti = this.code.code.getUint8(this.lastpc)
+      var tb: Traceback = {
+        tb_frame: {
+          lastpc: this.lastpc,
+          pc: this.pc,
+          code: this.code,
+          locals: this.locals,
+          blockStack: this.blockStack
+        },
+        tb_lasti: lasti >= Bin.HAVE_ARGUMENT ?
+          [this.lastpc, lasti, this.code.code.getUint16(this.lastpc+1, true)] :
+          [this.lastpc, lasti]
+      }
+      for (var i = this.codeStack.length - 1; i >= 0; i--) {
+        lasti = this.codeStack[i].code.code.getUint8(this.codeStack[i].lastpc)
+        tb = {
+          tb_next: tb,
+          tb_frame: this.codeStack[i],
+          tb_lasti: lasti >= Bin.HAVE_ARGUMENT ?
+            [this.codeStack[i].lastpc, lasti, this.codeStack[i].code.code.getUint16(
+              this.codeStack[i].lastpc + 1, true)] :
+            [this.codeStack[i].lastpc, lasti]
+        }
+      }
+      return tb
+    }
+
     pushCode(newCode: PyCodeObject, newLocals: { [name: string]: PyObject }): void {
       if (this.codeStack.length >= 128) throw new Error("stack overflow")
       this.codeStack.push({
-        pc: this.pc, code: this.code, locals: this.locals, blockStack: this.blockStack
+        lastpc: this.lastpc,
+        pc: this.pc,
+        code: this.code,
+        locals: this.locals,
+        blockStack: this.blockStack
       })
+      this.lastpc = 0
       this.pc = 0
       this.code = newCode
       this.locals = newLocals
@@ -73,6 +121,7 @@ module Python {
       if (this.codeStack.length === 0) throw new Error("stack underflow")
       var nextStackFrame = this.codeStack.pop()
       this.code = nextStackFrame.code
+      this.lastpc = nextStackFrame.lastpc
       this.pc = nextStackFrame.pc
       this.locals = nextStackFrame.locals
       this.blockStack = nextStackFrame.blockStack

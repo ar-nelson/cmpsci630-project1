@@ -7,7 +7,7 @@ module Python {
       case Bin.Type.NONE: return None
       case Bin.Type.FALSE: return False
       case Bin.Type.TRUE: return True
-      case Bin.Type.STOPITER: return null // TODO: return StopIteration
+      case Bin.Type.STOPITER: return buildException(Types.StopIteration, "StopIteration")
       case Bin.Type.ELLIPSIS: return Ellipsis
       case Bin.Type.INT:
         return new PyInt((<Bin.NumberObject><any>object).n)
