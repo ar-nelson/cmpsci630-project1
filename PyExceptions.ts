@@ -29,6 +29,7 @@ module Python {
     export var StopIteration = buildType('StopIteration', [Exception], {})
     export var SystemError = buildType('SystemError', [StandardError], {})
     export var TypeError = buildType('TypeError', [StandardError], {})
+    export var ValueError = buildType('ValueError', [StandardError], {})
     export var ZeroDivisionError = buildType('ZeroDivisionError', [ArithmeticError], {})
   }
 

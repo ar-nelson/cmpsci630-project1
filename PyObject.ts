@@ -192,8 +192,10 @@ module Python {
     }
     compare(o2: PyObject): number {
       var result = this.callMethodObjArgs("__cmp__", o2)
-      if (result.hasOwnProperty("intValue")) return (<any>result)["intValue"]()
-      else throw Errors.typeError("__cmp__ must return an int")
+      if ((<NumberLikeObject>result).intValue) return (<NumberLikeObject>result).intValue()
+      else if (result === NotImplemented) Errors.typeError("cannot compare " +
+        (<any>this).type.name + " and " + o2.type.name)
+      else throw Errors.typeError("__cmp__ must return an int (got " + result.type.name + ")")
     }
     str(): PyObject {
       if (this.hasAttrString("__str__")) return this.callMethodObjArgs("__str__")
@@ -326,37 +328,37 @@ module Python {
   export class PyInstanceBase extends PyObjectBase {
     hasAttr(attrName: PyObject) {
       if ((<any>this).type.hasAttr(attrName)) {
-        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm()
+        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm(this)
         if (typeAttr) return true
       }
       return false
     }
     getAttr(attrName: PyObject) {
       if ((<any>this).type.hasAttr(attrName)) {
-        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm()
+        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm(this)
         if (typeAttr) return typeAttr
       }
       throw Errors.attributeError("'" + (<any>this).type.name + "' object has no attribute " +
-        (<StringLikeObject>attrName.repr()).strValue)
+        attrName)
     }
     setAttr(attrName: PyObject, v: PyObject): boolean {
       if ((<any>this).type.hasAttr(attrName)) {
-        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm()
+        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm(this)
         if (typeAttr) throw Errors.attributeError("'" + (<any>this).type.name +
-          "' object attribute " + attrName.repr() + " is read-only")
+          "' object attribute " + attrName + " is read-only")
       }
       throw Errors.attributeError("'" + (<any>this).type.name + "' object has no attribute " +
-        (<StringLikeObject>attrName.repr()).strValue)
+        attrName)
       return null
     }
     delAttr(attrName: PyObject): boolean {
       if ((<any>this).type.hasAttr(attrName)) {
-        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm()
+        var typeAttr: PyObject = (<any>this).type.getAttr(attrName).getInstanceForm(this)
         if (typeAttr) throw Errors.attributeError("'" + (<any>this).type.name +
-          "' object attribute " + attrName.repr() + " is read-only")
+          "' object attribute " + attrName + " is read-only")
       }
       throw Errors.attributeError("'" + (<any>this).type.name + "' object has no attribute " +
-        (<StringLikeObject>attrName.repr()).strValue)
+        attrName)
       return null
     }
     isSubclass(cls: PyObject) {return false }
@@ -448,6 +450,7 @@ module Python {
   export function buildFunction(name: string, fn: Function, minArgs = fn.length, maxArgs = fn.length):
       (args: SequenceLikeObject, kw?: DictLikeObject) => PyObject {
     return (args: SequenceLikeObject, kw?: DictLikeObject) => {
+      console.dir(args.seqValue)
       if (kw && kw.isTrue()) throw Errors.typeError("method " + name +
         " doesn't take keyword arguments")
       if (args.seqValue.length >= minArgs && args.seqValue.length <= maxArgs) {

@@ -1,5 +1,5 @@
 #list comprehensions words
-words = 'The quick brown fox jumps over the lazy dog'.split()
+words = 'The quick brown fox jumps over the lazy dog'.split(' ')
 print words
 ['The', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy', 'dog']
 stuff = [[w.upper(), w.lower(), len(w)] for w in words]

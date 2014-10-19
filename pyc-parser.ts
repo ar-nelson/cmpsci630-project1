@@ -68,7 +68,7 @@ module Python.Bin {
             type: Type.STRING,
             str: this.interned[data.getInt32(offset + 1, true)]
           }
-        case Type.UNICODE: 
+        case Type.UNICODE:
           throw ParseError("UNICODE is not yet supported.", offset)
         case Type.TUPLE:
         case Type.LIST:
@@ -97,8 +97,8 @@ module Python.Bin {
     }
 
     private parseString(data: DataView): StringObject {
-      console.log("Parsing string at 0x" + this.offset.toString(16))
       var len = data.getUint32(this.offset, true)
+      console.log("Parsing string of length " + len + " at 0x" + this.offset.toString(16))
       var bytes = []
       for (var i = 0; i < len; i++) bytes.push(data.getUint8(this.offset+4+i))
       this.offset += len + 4
@@ -156,10 +156,10 @@ module Python.Bin {
         varnames: this.toStrings(this.checkType(data, Type.TUPLE).parseSequence(data)),
         freevars: this.toStrings(this.checkType(data, Type.TUPLE).parseSequence(data)),
         cellvars: this.toStrings(this.checkType(data, Type.TUPLE).parseSequence(data)),
-        filename: this.checkType(data, Type.STRING).parseString(data).str,
-        name: this.checkType(data, Type.STRING).parseString(data).str,
+        filename: (<StringObject>this.parseObject(data)).str,
+        name: (<StringObject>this.parseObject(data)).str,
         firstlineno: this.readUint32(data),
-        lnotab: this.checkType(data, Type.STRING).parseString(data).str
+        lnotab: (<StringObject>this.parseObject(data)).str
       }
     }
 
@@ -170,9 +170,11 @@ module Python.Bin {
     }
 
     private checkType(data: DataView, type: Type): Parser {
-      console.debug("Checking type at 0x" + this.offset.toString(16))
+      if (data.getUint8(this.offset) !== type) {
+        throw ParseError("Expected " + Type[type] + "; got " + Type[data.getUint8(this.offset)] +
+          ".", this.offset)
+      }
       this.offset++
-      // TODO: Check type
       return this
     }
 

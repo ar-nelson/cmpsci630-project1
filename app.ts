@@ -2,7 +2,6 @@
 var builtinTestFiles = [
   "Basicmath.pyc",
   "Basicoperations.pyc",
-  "complexmath.pyc",
   "example1.pyc",
   "functions.pyc",
   "ifwithcomparisons.pyc",
@@ -66,7 +65,7 @@ window.onload = () => {
       return
     }
     try {
-      printSpecialOutput("Loaded " + JSON.stringify(codeObject.name) + ".", "info")
+      printSpecialOutput("Loaded " + JSON.stringify(codeObject.filename) + ".", "info")
       var spaceNeeded = false
       var interpreter = new Python.Interpreter(codeObject, null, {
         print: (str: string) => {

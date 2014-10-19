@@ -46,5 +46,52 @@ module Python {
         numbers.push(new PyInt(i))
       return new PyTuple(numbers)
     }, 1, 3),
-  }
+    sorted: new BuiltinFunction('sorted', (seq: PyObject) => {
+      var iter = seq.getIter()
+      var list = []
+      while(true) {
+        try {
+          list.push(iter.callMethodObjArgs("next"))
+        } catch (ex) {
+          if (ex instanceof PyException && ex.type === Types.StopIteration) {
+            return new PyList(list.sort((a, b) => a.compare(b)))
+          } else throw ex
+        }
+      }
+    })
+  };
+
+  (<DictProxy>Types.TupleType.__dict__).contents["__call__"] = new BuiltinFunction('tuple',
+    (iter?: PyObject) => {
+      if (iter) {
+        var items = []
+        while (true) {
+          try {
+            items.push(iter.callMethodObjArgs("next"))
+          } catch (ex) {
+            if (ex instanceof PyException && ex.type === Types.StopIteration) {
+              return new PyTuple(items)
+            } else throw ex
+          }
+        }
+      } else return new PyTuple([])
+    }, 0, 1);
+
+  (<DictProxy>Types.ListType.__dict__).contents["__call__"] = new BuiltinFunction('list',
+    (iter?: PyObject) => {
+      if (iter) {
+        var items = []
+        while (true) {
+          try {
+            items.push(iter.callMethodObjArgs("next"))
+          } catch (ex) {
+            if (ex instanceof PyException && ex.type === Types.StopIteration) {
+              return new PyList(items)
+            } else throw ex
+          }
+        }
+      } else return new PyList([])
+    }, 0, 1)
+
+  // TODO: Other type constructors.
 }

@@ -9,7 +9,7 @@ module Python {
     constructor() {}
 
     hasKey(key: PyObject): boolean {
-      var bucket = this.buckets[key.hash() % this.buckets.length]
+      var bucket = this.buckets[Math.abs(key.hash() % this.buckets.length)]
       for (var i = 0; i < bucket.length; i++) {
         var cmp = key.richCompare(bucket[i][0], PyCompOp.EQ)
         if (cmp === NotImplemented) cmp = bucket[i][0].richCompare(key, PyCompOp.EQ)
@@ -20,7 +20,7 @@ module Python {
     }
 
     get(key: PyObject): PyObject {
-      var bucket = this.buckets[key.hash() % this.buckets.length]
+      var bucket = this.buckets[Math.abs(key.hash() % this.buckets.length)]
       for (var i = 0; i < bucket.length; i++) {
         var cmp = key.richCompare(bucket[i][0], PyCompOp.EQ)
         if (cmp === NotImplemented) cmp = bucket[i][0].richCompare(key, PyCompOp.EQ)
@@ -31,7 +31,7 @@ module Python {
     }
 
     put(key: PyObject, value: PyObject): PyObject {
-      var bucket = this.buckets[key.hash() % this.buckets.length]
+      var bucket = this.buckets[Math.abs(key.hash() % this.buckets.length)]
       if (bucket.length > 0) {
         for (var i = 0; i < bucket.length; i++) {
           var cmp = key.richCompare(bucket[i][0], PyCompOp.EQ)
@@ -45,12 +45,12 @@ module Python {
         }
       }
       bucket.push([key, value])
-      length++
+      this.length++
       return null
     }
 
     remove(key: PyObject): PyObject {
-      var bucket = this.buckets[key.hash() % this.buckets.length]
+      var bucket = this.buckets[Math.abs(key.hash() % this.buckets.length)]
       if (bucket.length > 0) {
         for (var i = 0; i < bucket.length; i++) {
           var entry = bucket.shift()
@@ -58,7 +58,7 @@ module Python {
           if (cmp === NotImplemented) cmp = entry[0].richCompare(key, PyCompOp.EQ)
           if (cmp === NotImplemented) cmp = key.richCompare(entry[0], PyCompOp.IS)
           if (cmp !== NotImplemented && cmp.isTrue()) {
-            length--
+            this.length--
             return entry[1]
           } else bucket.push(entry)
         }

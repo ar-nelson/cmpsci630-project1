@@ -24,7 +24,7 @@ module Python {
           "tuple indices must be integers, not " + from.type.name)
         if (to.numberSize !== NumberSize.INT) throw Errors.typeError(
           "tuple indices must be integers, not " + to.type.name)
-        var i = from.intValue(), j = from.intValue()
+        var i = from.intValue(), j = to.intValue()
         while (i < 0) i += self.seqValue.length
         while (j < 0) j += self.seqValue.length
         if (i > self.seqValue.length) i = self.seqValue.length
@@ -37,7 +37,7 @@ module Python {
         var str = "("
         for (var i = 0; i < self.seqValue.length; i++) {
           if (i > 0) str += " "
-          str += (<StringLikeObject>self.seqValue[i].repr()).strValue + ","
+          str += self.seqValue[i]+ ","
         }
         return new PyString(str + ")")
       },
@@ -58,7 +58,8 @@ module Python {
         var n = index.intValue()
         while (n < 0) n += self.seqValue.length
         if (n > self.seqValue.length) throw Errors.indexError("list index out of range")
-        delete self.seqValue[n]
+        self.seqValue = self.seqValue.slice(0, n).concat(
+          self.seqValue.slice(n+1, self.seqValue.length))
         return None
       },
       __getitem__: (self: PyList, index: PyInt) => {
@@ -74,7 +75,7 @@ module Python {
           "list indices must be integers, not " + from.type.name)
         if (to.numberSize !== NumberSize.INT) throw Errors.typeError(
           "list indices must be integers, not " + to.type.name)
-        var i = from.intValue(), j = from.intValue()
+        var i = from.intValue(), j = to.intValue()
         while (i < 0) i += self.seqValue.length
         while (j < 0) j += self.seqValue.length
         if (i > self.seqValue.length) i = self.seqValue.length
@@ -87,7 +88,7 @@ module Python {
         var str = "["
         for (var i = 0; i < self.seqValue.length; i++) {
           if (i > 0) str += ", "
-          str += (<StringLikeObject>self.seqValue[i].repr()).strValue
+          str += self.seqValue[i]
         }
         return new PyString(str + "]")
       },
@@ -103,13 +104,35 @@ module Python {
       append: (self: PyList, value: PyObject) => {
         self.seqValue.push(value)
         return None
+      },
+      sort: (self: PyList): PyObject => {
+        self.seqValue = self.seqValue.sort((a, b) => a.compare(b))
+        return self
       }
     })
     export var SetType = buildType('set', [ObjectType], {
-      // TODO: Implement tuple methods
+      __len__: (self: PySet) => new PyInt(self.hashMap.length),
+      __repr__: (self: PySet) => {
+        var str = "set(["
+        var values = self.hashMap.values()
+        for (var i = 0; i < values.length; i++) {
+          if (i > 0) str += ", "
+          str += values[i]
+        }
+        return new PyString(str + "])")
+      },
     })
     export var FrozenSetType = buildType('frozenset', [ObjectType], {
-      // TODO: Implement list methods
+      __len__: (self: PyFrozenSet) => new PyInt(self.hashMap.length),
+      __repr__: (self: PyFrozenSet) => {
+        var str = "frozenset(["
+        var values = self.hashMap.values()
+        for (var i = 0; i < values.length; i++) {
+          if (i > 0) str += ", "
+          str += values[i]
+        }
+        return new PyString(str + "])")
+      },
     })
     export var IterType = buildType('iter', [ObjectType], {
       __iter__: (self: PyIter) => self,
@@ -137,7 +160,7 @@ module Python {
 
   export class PySet extends PyInstanceBase implements PyObject {
     type = Types.SetType
-    private hashMap = new ObjectHashMap()
+    hashMap = new ObjectHashMap()
 
     constructor(initialContents: PyObject[]) { 
       super() 
@@ -152,7 +175,7 @@ module Python {
 
   export class PyFrozenSet extends PyInstanceBase implements PyObject {
     type = Types.SetType
-    private hashMap = new ObjectHashMap()
+    hashMap = new ObjectHashMap()
 
     constructor(contents: PyObject[]) {
       super()

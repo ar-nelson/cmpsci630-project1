@@ -65,7 +65,10 @@ module Python {
           } catch (ex) {
             if (ex instanceof PyException) {
               this.unwindTo(BlockType.EXCEPT, ex)
-            } else throw ex
+            } else {
+              console.dir(this.traceback())
+              throw ex
+            }
           }
         }
         throw Error("Reached end of code without a RETURN_VALUE")
@@ -347,7 +350,7 @@ module Python {
           this.blockStack.push(block)
           break
         case Bin.Opcode.LIST_APPEND:
-          stack[stack.length - arg].callMethodObjArgs("append", stack.pop())
+          stack[stack.length - (arg+1)].callMethodObjArgs("append", stack.pop())
           break
 
         // TODO: LOAD_LOCALS
