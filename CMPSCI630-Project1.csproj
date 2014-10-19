@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="builtins.ts" />
     <TypeScriptCompile Include="bytecode.ts" />
     <TypeScriptCompile Include="hashmap.ts" />
     <TypeScriptCompile Include="interpreter.ts" />

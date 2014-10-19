@@ -444,6 +444,22 @@ module Python {
 
     isTrue() {return true}
   }
+
+  export function buildFunction(name: string, fn: Function, minArgs = fn.length, maxArgs = fn.length):
+      (args: SequenceLikeObject, kw?: DictLikeObject) => PyObject {
+    return (args: SequenceLikeObject, kw?: DictLikeObject) => {
+      if (kw && kw.isTrue()) throw Errors.typeError("method " + name +
+        " doesn't take keyword arguments")
+      if (args.seqValue.length >= minArgs && args.seqValue.length <= maxArgs) {
+        return fn.apply(null, args.seqValue)
+      } else {
+        var amount = minArgs === maxArgs ? fn.length.toString() : (args.seqValue.length < minArgs ?
+          "at least " + minArgs : "at most " + maxArgs)
+        throw Errors.typeError(name + " expected " + amount + " arguments, got " +
+          args.seqValue.length)
+      }
+    }
+  }
   
   export function buildType(
     name: string,
@@ -451,22 +467,9 @@ module Python {
     methods: {[key: string]: Function}
   ): PyTypeObject {
     var newMethods: {[key: string]: BuiltinMethod} = {}
-    function buildMethod(mname: string) {
-      var oldFunc = methods[mname]
-      newMethods[mname] = new BuiltinMethod(name, mname, (args: SequenceLikeObject, kw?: DictLikeObject) => {
-        if (kw && kw.isTrue()) throw Errors.typeError("method " + mname +
-          " doesn't take keyword arguments")
-        if (args.seqValue.length === oldFunc.length) {
-          return oldFunc.apply(null, args.seqValue)
-        } else {
-          console.log(mname)
-          console.dir(args)
-          throw Errors.typeError(mname + " expected " + oldFunc.length + " arguments, got " +
-          args.seqValue.length)
-        }
-      })
+    for (var mname in methods) if (methods.hasOwnProperty(mname)) {
+      newMethods[mname] = new BuiltinMethod(name, mname, buildFunction(mname, methods[mname]))
     }
-    for (var mname in methods) if (methods.hasOwnProperty(mname)) buildMethod(mname)
     return new PyTypeObject(name, true, new DictProxy(newMethods), bases)
   }
 }

@@ -304,6 +304,8 @@ module Python {
           } else if (Object.prototype.hasOwnProperty.call(this.globals, name)) {
             // FIXME: Should it actually be trying globals?
             stack.push(this.globals[name])
+          } else if (Object.prototype.hasOwnProperty.call(builtins, name)) {
+            stack.push(builtins[name])
           } else {
             throw Errors.nameError("name '" + name + "' is not defined")
           }
@@ -349,6 +351,8 @@ module Python {
           name = this.code.names[arg]
           if (Object.prototype.hasOwnProperty.call(this.globals, name)) {
             stack.push(this.globals[name])
+          } else if (Object.prototype.hasOwnProperty.call(builtins, name)) {
+            stack.push(builtins[name])
           } else {
             throw Errors.nameError("global name '" + name + "' is not defined")
           }
