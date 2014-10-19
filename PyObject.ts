@@ -67,7 +67,7 @@ module Python {
     callMethodObjArgs(name: string, ...args: PyObject[]): PyObject
     hash(): number
     isTrue(): boolean
-    not(): boolean
+    not(): PyObject
     typeCheck(type: PyTypeObject): boolean
     getItem(key: PyObject): PyObject
     setItem(key: PyObject, v: PyObject): boolean
@@ -146,7 +146,7 @@ module Python {
           } else return NotImplemented
         case PyCompOp.NOT_IN:
           if (this.hasAttrString("__contains__")) {
-            return this.callMethodObjArgs("__contains__", o2).callMethodObjArgs("__not__")
+            return this.callMethodObjArgs("__contains__", o2).not()
           } else return NotImplemented
         case PyCompOp.IS:
           n1 = <NumberLikeObject><any>this; n2 = <NumberLikeObject><any>o2
@@ -242,7 +242,7 @@ module Python {
         return (<NumberLikeObject><any>this.callMethodObjArgs("__hash__")).intValue()
       } else return this.id
     }
-    not(): boolean {return !(<any>this).isTrue()}
+    not(): PyObject {return Bool(!(<any>this).isTrue())}
     typeCheck(type: PyTypeObject): boolean {
       return this.isInstance(type) || (<any>this).isSubclass(type)
     }

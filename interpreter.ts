@@ -26,6 +26,9 @@ module Python {
 
   export var interpreter: Interpreter = null
 
+  var zero = new PyInt(0)
+  var maxint = new PyInt(Math.pow(2, 31))
+
   export class Interpreter {
     private lastpc: number = 0
     private pc: number = 0
@@ -184,7 +187,7 @@ module Python {
           stack.push(stack.pop().callMethodObjArgs("__neg__"))
           break
         case Bin.Opcode.UNARY_NOT:
-          stack.push(stack.pop().callMethodObjArgs("__not__"))
+          stack.push(stack.pop().not())
           break
         case Bin.Opcode.UNARY_CONVERT:
           // Not sure what this does.
@@ -266,9 +269,52 @@ module Python {
             opsym + ": '" + tos1.type.name + "' and '" + tos.type.name + "'")
           stack.push(res)
           break
-
-        // TODO: Slice operations
-
+        case Bin.Opcode.SLICE_0:
+          stack.push(stack.pop().callMethodObjArgs("__getslice__", zero, maxint))
+          break
+        case Bin.Opcode.SLICE_1:
+          tos = stack.pop(); tos1 = stack.pop()
+          stack.push(tos1.callMethodObjArgs("__getslice__", tos, maxint))
+          break
+        case Bin.Opcode.SLICE_2:
+          tos = stack.pop(); tos1 = stack.pop()
+          stack.push(tos1.callMethodObjArgs("__getslice__", zero, tos))
+          break
+        case Bin.Opcode.SLICE_3:
+          tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop()
+          stack.push(tos2.callMethodObjArgs("__getslice__", tos1, tos))
+          break
+        case Bin.Opcode.STORE_SLICE_0:
+          tos = stack.pop(); tos1 = stack.pop()
+          tos.callMethodObjArgs("__setslice__", zero, maxint, tos1)
+          break
+        case Bin.Opcode.STORE_SLICE_1:
+          tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop()
+          tos1.callMethodObjArgs("__setslice__", tos, maxint, tos2)
+          break
+        case Bin.Opcode.STORE_SLICE_2:
+          tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop()
+          tos1.callMethodObjArgs("__setslice__", zero, tos, tos2)
+          break
+        case Bin.Opcode.STORE_SLICE_3:
+          tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop(); tos3 = stack.pop()
+          tos2.callMethodObjArgs("__setslice__", tos1, tos, tos3)
+          break
+        case Bin.Opcode.DELETE_SLICE_0:
+          stack.pop().callMethodObjArgs("__delslice__", zero, maxint)
+          break
+        case Bin.Opcode.DELETE_SLICE_1:
+          tos = stack.pop(); tos1 = stack.pop()
+          tos1.callMethodObjArgs("__delslice__", tos, maxint)
+          break
+        case Bin.Opcode.DELETE_SLICE_2:
+          tos = stack.pop(); tos1 = stack.pop()
+          tos1.callMethodObjArgs("__delslice__", zero, tos)
+          break
+        case Bin.Opcode.DELETE_SLICE_3:
+          tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop()
+          tos2.callMethodObjArgs("__delslice__", tos1, tos)
+          break
         case Bin.Opcode.STORE_MAP:
           tos = stack.pop(); tos1 = stack.pop(); tos2 = stack.pop()
           tos2.setItem(tos, tos1)
@@ -331,6 +377,19 @@ module Python {
           delete this.locals[this.code.names[arg]]
           break
 
+        case Bin.Opcode.FOR_ITER:
+          tos = stack.pop()
+          try {tos1 = tos.callMethodObjArgs("next")}
+          catch (ex) {
+            if (ex instanceof PyException && ex.type === Types.StopIteration) {
+              this.pc += arg
+              break
+            }
+            else throw ex
+          }
+          stack.push(tos); stack.push(tos1)
+          break
+
         case Bin.Opcode.STORE_ATTR:
           stack.pop().setAttrString(this.code.names[arg], stack.pop())
           break
@@ -358,6 +417,24 @@ module Python {
           } else {
             throw Errors.nameError("name '" + name + "' is not defined")
           }
+          break
+        case Bin.Opcode.BUILD_TUPLE:
+          var items: PyObject[] = []
+          for (var i = 0; i < arg; i++) items.unshift(stack.pop())
+          stack.push(new PyTuple(items))
+          break
+        case Bin.Opcode.BUILD_LIST:
+          var items: PyObject[] = []
+          for (var i = 0; i < arg; i++) items.unshift(stack.pop())
+          stack.push(new PyList(items))
+          break
+        case Bin.Opcode.BUILD_SET:
+          var items: PyObject[] = []
+          for (var i = 0; i < arg; i++) items.unshift(stack.pop())
+          stack.push(new PySet(items))
+          break
+        case Bin.Opcode.BUILD_MAP:
+          stack.push(new PyDict([], []))
           break
 
         case Bin.Opcode.LOAD_ATTR:
