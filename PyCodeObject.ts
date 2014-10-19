@@ -90,14 +90,14 @@ module Python {
         }
       }
       if (this.code.hasVarargs) {
-        locals[this.code.argcount + 1] = new PyTuple(extraArgs)
+        locals[this.code.varnames[this.code.argcount]] = new PyTuple(extraArgs)
       } else if (extraArgs.length > 0) {
         throw Errors.typeError(this.code.name + "() takes at most " +
           this.code.argcount + " arguments (" + (this.code.argcount + extraArgs.length) +
           " given)")
       }
       if (this.code.hasKwArgs) {
-        var kwArgsName = this.code.varnames[this.code.argcount + (this.code.hasVarargs ? 2 : 1)]
+        var kwArgsName = this.code.varnames[this.code.argcount + (this.code.hasVarargs ? 1 : 0)]
         locals[kwArgsName] = new PyDict(extraKeys, extraValues)
       }
       for (i = 0; i < this.code.argcount; i++) {

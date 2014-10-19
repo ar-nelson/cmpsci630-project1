@@ -337,7 +337,7 @@ module Python {
         if (typeAttr) return typeAttr
       }
       throw Errors.attributeError("'" + (<any>this).type.name + "' object has no attribute " +
-        attrName.repr())
+        (<StringLikeObject>attrName.repr()).strValue)
     }
     setAttr(attrName: PyObject, v: PyObject): boolean {
       if ((<any>this).type.hasAttr(attrName)) {
@@ -346,7 +346,7 @@ module Python {
           "' object attribute " + attrName.repr() + " is read-only")
       }
       throw Errors.attributeError("'" + (<any>this).type.name + "' object has no attribute " +
-        attrName.repr())
+        (<StringLikeObject>attrName.repr()).strValue)
       return null
     }
     delAttr(attrName: PyObject): boolean {
@@ -356,7 +356,7 @@ module Python {
           "' object attribute " + attrName.repr() + " is read-only")
       }
       throw Errors.attributeError("'" + (<any>this).type.name + "' object has no attribute " +
-        attrName.repr())
+        (<StringLikeObject>attrName.repr()).strValue)
       return null
     }
     isSubclass(cls: PyObject) {return false }

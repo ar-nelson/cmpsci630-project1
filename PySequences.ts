@@ -13,6 +13,12 @@ module Python {
     export var FrozenSetType = buildType('frozenset', [ObjectType], {
       // TODO: Implement list methods
     })
+    export var IterType = buildType('iter', [ObjectType], {
+      __iter__: (self: PyIter) => self,
+      next: (self: PyIter) => {
+
+      }
+    })
   }
 
   export class PyTuple extends PyInstanceBase implements SequenceLikeObject {
@@ -57,5 +63,16 @@ module Python {
     isTrue() {
       return this.hashMap.length > 0
     }
+  }
+
+  export class PyIter extends PyInstanceBase implements PyObject {
+    type = Types.IterType
+    i: number = 0
+
+    constructor(private contents: PyObject[]) {
+      super()
+    }
+
+    isTrue() {return this.i < this.contents.length}
   }
 }
