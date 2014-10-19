@@ -450,7 +450,6 @@ module Python {
   export function buildFunction(name: string, fn: Function, minArgs = fn.length, maxArgs = fn.length):
       (args: SequenceLikeObject, kw?: DictLikeObject) => PyObject {
     return (args: SequenceLikeObject, kw?: DictLikeObject) => {
-      console.dir(args.seqValue)
       if (kw && kw.isTrue()) throw Errors.typeError("method " + name +
         " doesn't take keyword arguments")
       if (args.seqValue.length >= minArgs && args.seqValue.length <= maxArgs) {

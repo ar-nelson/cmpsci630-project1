@@ -98,7 +98,7 @@ module Python.Bin {
 
     private parseString(data: DataView): StringObject {
       var len = data.getUint32(this.offset, true)
-      console.log("Parsing string of length " + len + " at 0x" + this.offset.toString(16))
+      console.debug("Parsing string of length " + len + " at 0x" + this.offset.toString(16))
       var bytes = []
       for (var i = 0; i < len; i++) bytes.push(data.getUint8(this.offset+4+i))
       this.offset += len + 4

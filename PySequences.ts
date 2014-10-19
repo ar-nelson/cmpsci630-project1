@@ -197,5 +197,10 @@ module Python {
     }
 
     isTrue() {return this.i < this.contents.length}
+
+    toString() {
+      return "<iter: next = " + (this.i < this.contents.length ?
+        this.contents[this.i].toString() : "StopIteration") + ">"
+    }
   }
 }

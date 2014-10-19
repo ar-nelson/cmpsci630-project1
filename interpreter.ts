@@ -16,6 +16,7 @@ module Python {
     type: BlockType
     start: number
     end: number
+    stack: PyObject[]
   }
 
   export interface Traceback {
@@ -32,7 +33,6 @@ module Python {
   export class Interpreter {
     private lastpc: number = 0
     private pc: number = 0
-    private stack: PyObject[] = []
     private code: PyCodeObject
     private codeStack: StackFrame[] = []
     private locals: { [name: string]: PyObject } = {}
@@ -40,12 +40,15 @@ module Python {
     private globals: { [name: string]: PyObject } = {}
     private unwinding = false
 
+    private stack() {return this.blockStack[this.blockStack.length - 1].stack}
+
     constructor(code: Bin.CodeObject, public importer?: Importer, public printer?: Printer) {
       this.code = <any>unmarshalObject(code)
       this.blockStack = [{
         type: BlockType.FUNCTION,
         start: 0,
         end: code.code.byteLength,
+        stack: []
       }]
     }
 
@@ -119,11 +122,11 @@ module Python {
       this.code = newCode
       this.locals = newLocals
       this.blockStack = [{
-        type: BlockType.FUNCTION, start: 0, end: newCode.code.byteLength
+        type: BlockType.FUNCTION, start: 0, end: newCode.code.byteLength, stack: []
       }]
     }
 
-    pushStackValue(value: PyObject): void {this.stack.push(value)}
+    pushStackValue(value: PyObject): void {this.stack().push(value)}
 
     private popCode() {
       if (this.codeStack.length === 0) throw new Error("stack underflow")
@@ -159,7 +162,7 @@ module Python {
     }
 
     private execInstr(opcode: Bin.Opcode, arg?: number): boolean {
-      var stack = this.stack
+      var stack = this.stack()
       var tos: PyObject, tos1: PyObject, tos2: PyObject, tos3: PyObject, res: PyObject
       var op: string, rop: string, opsym: string, name: string
       
@@ -348,8 +351,8 @@ module Python {
           break
         case Bin.Opcode.CONTINUE_LOOP:
           var block = this.unwindTo(BlockType.LOOP)
-          this.pc = block.start
           this.blockStack.push(block)
+          this.pc = arg
           break
         case Bin.Opcode.LIST_APPEND:
           stack[stack.length - (arg+1)].callMethodObjArgs("append", stack.pop())
@@ -363,7 +366,11 @@ module Python {
             if (this.printer) this.printer.printReturnValue(stack.pop())
             interpreter = null
             return true
-          } else this.popCode()
+          } else {
+            tos = stack.pop()
+            this.popCode()
+            this.stack().push(tos)
+          }
           break
 
         // TODO: Several more instrs, randomly inserted between these...
@@ -383,16 +390,17 @@ module Python {
           break
 
         case Bin.Opcode.FOR_ITER:
+          var exception
           tos = stack.pop()
-          try {tos1 = tos.callMethodObjArgs("next")}
-          catch (ex) {
-            if (ex instanceof PyException && ex.type === Types.StopIteration) {
-              this.pc += arg
-              break
-            }
+          try {
+            tos1 = tos.callMethodObjArgs("next")
+            console.log("replacing " + tos)
+            stack.push(tos)
+            stack.push(tos1)
+          } catch (ex) {
+            if (ex instanceof PyException && ex.type === Types.StopIteration) this.pc += arg
             else throw ex
           }
-          stack.push(tos); stack.push(tos1)
           break
 
         case Bin.Opcode.STORE_ATTR:
@@ -489,13 +497,28 @@ module Python {
           }
           break
         case Bin.Opcode.SETUP_LOOP:
-          this.blockStack.push({type: BlockType.LOOP, start: this.pc, end: this.pc + arg})
+          this.blockStack.push({
+            type: BlockType.LOOP,
+            start: this.pc,
+            end: this.pc + arg,
+            stack: []
+          })
           break
         case Bin.Opcode.SETUP_EXCEPT:
-          this.blockStack.push({type: BlockType.EXCEPT, start: this.pc, end: this.pc + arg})
+          this.blockStack.push({
+            type: BlockType.EXCEPT,
+            start: this.pc,
+            end: this.pc + arg,
+            stack: []
+          })
           break
         case Bin.Opcode.SETUP_FINALLY:
-          this.blockStack.push({type: BlockType.FINALLY, start: this.pc, end: this.pc + arg})
+          this.blockStack.push({
+            type: BlockType.FINALLY,
+            start: this.pc,
+            end: this.pc + arg,
+            stack: []
+          })
           break
         case Bin.Opcode.LOAD_FAST:
           name = this.code.varnames[arg]

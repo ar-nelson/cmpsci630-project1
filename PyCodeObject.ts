@@ -102,7 +102,6 @@ module Python {
       }
       for (i = 0; i < this.code.argcount; i++) {
         if (!Object.hasOwnProperty.call(locals, this.code.varnames[i])) {
-          console.dir(locals)
           throw Errors.typeError(this.code.name + "() takes " + (
             (this.hasDefaults || this.code.hasVarargs || this.code.hasKwArgs) ?
             "at least " : "exactly "
