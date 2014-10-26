@@ -32,7 +32,11 @@ module Python {
       return NotImplemented
     }
     switch (Math.max(a.numberSize, b.numberSize)) {
-      case NumberSize.INT: return new PyInt(a.intValue() % b.intValue())
+      case NumberSize.INT:
+        if (b.intValue() === 0) { 
+          throw buildException(Types.ZeroDivisionError, "integer division or modulo by zero")
+        }
+        return new PyInt(a.intValue() % b.intValue())
       case NumberSize.LONG: //TODO: longs
       case NumberSize.FLOAT: return new PyFloat(a.floatValue() % b.floatValue())
       case NumberSize.COMPLEX: default:
@@ -58,7 +62,11 @@ module Python {
       return NotImplemented
     }
     switch (Math.max(a.numberSize, b.numberSize)) {
-      case NumberSize.INT: return new PyInt(Math.floor(a.intValue() / b.intValue()) | 0)
+      case NumberSize.INT:
+        if (b.intValue() === 0) { 
+          throw buildException(Types.ZeroDivisionError, "integer division or modulo by zero")
+        }
+        return new PyInt(Math.floor(a.intValue() / b.intValue()) | 0)
       case NumberSize.LONG: //TODO: longs
       case NumberSize.FLOAT: return new PyFloat(Math.floor(a.floatValue() / b.floatValue()))
       case NumberSize.COMPLEX: default:

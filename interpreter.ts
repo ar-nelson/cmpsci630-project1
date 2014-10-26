@@ -54,7 +54,7 @@ module Python {
 
     exec(): void {
       interpreter = this
-      try {
+      //try {
         while (this.pc < this.code.code.byteLength) {
           this.lastpc = this.pc
           var instr = this.code.code.getUint8(this.pc++)
@@ -67,7 +67,8 @@ module Python {
             if (this.execInstr(instr, arg)) return
           } catch (ex) {
             if (ex instanceof PyException) {
-              this.unwindTo(BlockType.EXCEPT, ex)
+              var except = this.unwindTo(BlockType.EXCEPT, ex)
+              this.pc = except.end
             } else {
               console.dir(this.traceback())
               throw ex
@@ -75,9 +76,9 @@ module Python {
           }
         }
         throw Error("Reached end of code without a RETURN_VALUE")
-      } finally {
-        interpreter = null
-      }
+      //} finally {
+      //  interpreter = null
+      //}
     }
 
     traceback(): Traceback {
@@ -138,12 +139,26 @@ module Python {
       this.blockStack = nextStackFrame.blockStack
     }
 
-    private unwindTo(type: BlockType, exception?: any): Block {
+    private unwindTo(type: BlockType, exception?: PyException): Block {
       while (this.blockStack.length > 0) {
         var block = this.blockStack.pop()
-        if (block.type === type) return block
+        if (block.type === type) {
+          if (exception) {
+            this.stack().push(None) // Should be traceback, but traceback objects aren't implemented.
+            this.stack().push(exception.args.length > 0 ? exception.args[0] : None)
+            this.stack().push(exception)
+          }
+          return block
+        }
         else if (block.type === BlockType.FINALLY) {
           this.pc = block.end
+          if (exception) {
+            this.stack().push(None) // Should be traceback, but traceback objects aren't implemented.
+            this.stack().push(exception.args.length > 0 ? exception.args[0] : None)
+            this.stack().push(exception)
+          } else {
+            this.stack().push(new PyInt(91)) // Ignored WHY value.
+          }
           this.unwinding = true
           this.exec()
           this.unwinding = false
@@ -198,9 +213,7 @@ module Python {
           stack.push(stack.pop().not())
           break
         case Bin.Opcode.UNARY_CONVERT:
-          // Not sure what this does.
-          stack.pop()
-          stack.push(NotImplemented)
+          stack.push(stack.pop().callMethodObjArgs("__repr__"))
           break
         case Bin.Opcode.UNARY_INVERT:
           stack.push(stack.pop().callMethodObjArgs("__invert__"))
@@ -368,6 +381,7 @@ module Python {
             return true
           } else {
             tos = stack.pop()
+            this.unwindTo(BlockType.FUNCTION)
             this.popCode()
             this.stack().push(tos)
           }
@@ -379,9 +393,22 @@ module Python {
           this.blockStack.pop()
           break
         case Bin.Opcode.END_FINALLY:
-          if (this.unwinding) return true
-          else throw Error("encountered END_FINALLY outside of a finally block")
-
+          tos = stack.pop()
+          if (tos.isInstance(Types.IntType)) {
+            if (this.unwinding) return true
+            else throw buildException(Types.SystemError,
+              "encountered END_FINALLY outside of a finally block")
+          } else if (tos.isInstance(Types.BaseException)) {
+            tos1 = stack.pop()
+            tos2 = stack.pop()
+            if (this.unwinding) return true
+            else throw buildException(Types.SystemError,
+              "encountered END_FINALLY outside of a finally block")
+          } else if (tos === None) {
+            // Do nothing.
+          } else {
+            throw buildException(Types.SystemError, "'finally' pops bad exception")
+          }
         case Bin.Opcode.STORE_NAME:
           this.locals[this.code.names[arg]] = stack.pop()
           break
@@ -394,7 +421,6 @@ module Python {
           tos = stack.pop()
           try {
             tos1 = tos.callMethodObjArgs("next")
-            console.log("replacing " + tos)
             stack.push(tos)
             stack.push(tos1)
           } catch (ex) {
@@ -559,8 +585,8 @@ module Python {
           break
 
         default:
-          throw new Error("Unimplemented opcode: " +
-             (Bin.Opcode[opcode] || "0x" + opcode.toString(16)))
+          throw buildException(Types.SystemError, "Unimplemented opcode: " +
+            (Bin.Opcode[opcode] || "0x" + opcode.toString(16)))
       }
       return false
     }

@@ -78,8 +78,8 @@ print str.lower();
 
 print "replace"
 str = "this is a string example. This is really a string";
-print str.replace("is", "was");
-print str.replace("is", "was", 3);
+print "old:", str
+print "new:", str.replace("is", "was");
 
 print "find and index backwards"
 str = "this is really a string example";
@@ -94,13 +94,12 @@ print str1.index(str2);
 
 print "split function"
 str = "Line1-abcdef \nLine2-abc \nLine4-abcd";
-print str.split( );
-print str.split(' ', 1 );
+print str.split(' ');
 
 print "startswith function"
 str = "this is a string example";
 print str.startswith( 'this' );
-print str.startswith( 'is', 2, 4 );
-print str.startswith( 'this', 2, 4 );
+print str[2:4].startswith( 'is' );
+print str[2:4].startswith( 'this' );
 
 print "str.upper() : ", str.upper()

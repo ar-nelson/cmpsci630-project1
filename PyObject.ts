@@ -172,7 +172,8 @@ module Python {
             }
           }
           return Bool(this !== o2)
-        // TODO: exception match
+        case PyCompOp.EXCEPTION_MATCH:
+          return Bool(this.isInstance(o2))
       }
       if (method) return this.callMethodObjArgs(method, o2)
       else if (this.hasAttrString("__cmp__")) {
@@ -207,7 +208,7 @@ module Python {
         this.id.toString(16) + ">")
     }
     isInstance(cls: PyObject): boolean {
-      return (<any>this).type.isSubclass(cls.type)
+      return (<any>this).type.isSubclass(cls)
     }
     isCallable() {return this.hasAttrString("__call__")}
     call(args: PyObject, kw?: PyObject): PyObject {
@@ -256,14 +257,20 @@ module Python {
     toString() {return this.repr()[strData]}
   }
 
+  var getTypeType: () => PyTypeObject = () => null
+
   export class PyTypeObject extends PyObjectBase implements PyObject {
-    type: PyTypeObject = null
+    type: PyTypeObject
+    
     constructor(
       public name: string,
       public builtin: boolean,
       public __dict__: DictLikeObject,
       private bases: PyTypeObject[] = [Types.ObjectType]
-    ) {super()}
+    ) {
+      super()
+      this.type = getTypeType()
+    }
 
     private hasTypeAttr(attrName: PyObject): boolean {
       if (this.__dict__.hasItem(attrName)) return true
@@ -365,8 +372,19 @@ module Python {
     isTypeObject() {return false }
   }
 
+  export module Types {
+    export var ObjectType = new PyTypeObject('object', true, null, [])
+    export var TypeType = new PyTypeObject('type', true, null, [ObjectType])
+    export var DictProxyType = new PyTypeObject('dictproxy', true, null, [ObjectType])
+  }
+
+  Types.ObjectType.type = Types.TypeType
+  Types.TypeType.type = Types.TypeType
+  Types.DictProxyType.type = Types.TypeType
+  getTypeType = () => Types.TypeType
+
   export class DictProxy extends PyInstanceBase implements PyObject, DictLikeObject {
-    type: PyTypeObject = null
+    type: PyTypeObject = Types.DictProxyType
     
     constructor(public contents: { [key: string]: PyObject }) {super()}
     
@@ -395,16 +413,14 @@ module Python {
     }
   }
 
+  Types.ObjectType.__dict__ = new DictProxy({})
+  Types.TypeType.__dict__ = new DictProxy({})
+  Types.DictProxyType.__dict__ = new DictProxy({})
+
   export module Types {
-    export var ObjectType = new PyTypeObject('object', true, new DictProxy({}), [])
-    export var TypeType = new PyTypeObject('type', true, new DictProxy({}), [ObjectType])
-    export var DictProxyType = new PyTypeObject('dictproxy', true, new DictProxy({}), [ObjectType])
     export var MethodDescriptorType = new PyTypeObject('method_descriptor', true, new DictProxy({}), [ObjectType])
     export var BuiltinMethodType = new PyTypeObject('builtin_function_or_method', true, new DictProxy({}), [ObjectType])
   }
-
-  PyTypeObject.prototype.type = Types.TypeType
-  DictProxy.prototype.type = Types.DictProxyType
 
   export class BuiltinMethod extends PyInstanceBase implements PyObject {
     type: PyTypeObject = Types.MethodDescriptorType

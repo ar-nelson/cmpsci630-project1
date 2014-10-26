@@ -2,7 +2,6 @@
 var builtinTestFiles = [
   "Basicmath.pyc",
   "Basicoperations.pyc",
-  "example1.pyc",
   "functions.pyc",
   "ifwithcomparisons.pyc",
   "kwargs.pyc",
@@ -12,6 +11,7 @@ var builtinTestFiles = [
   "nestedfor.pyc",
   "simplefor.pyc",
   "stringmanipulation.pyc",
+  "trycatch.pyc",
   "while.pyc"
 ]
 
@@ -71,6 +71,7 @@ window.onload = () => {
           outputbox.appendChild(currentOutput)
           callback(input.value)
         } catch (err) {
+          console.error(err)
           var errString = "INTERPRETER ERROR\n\n" + err.toString() + (err.stack ?
             "\n\n" + err.stack.toString() : "")
           printSpecialOutput(errString, "error")
@@ -117,6 +118,7 @@ window.onload = () => {
       })
       interpreter.exec()
     } catch (err) {
+      console.error(err)
       var errString = "INTERPRETER ERROR\n\n" + err.toString() + (err.stack ?
         "\n\n" + err.stack.toString() : "")
       printSpecialOutput(errString, "error")
@@ -133,6 +135,7 @@ window.onload = () => {
       if (this.status < 400) {
         parse(this.response)
       } else {
+        clearOutput()
         displayParseError("HTTP Error " + this.status + ": " + this.statusText)
       }
     }

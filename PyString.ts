@@ -28,7 +28,7 @@ module Python {
           "str indices must be integers, not " + from.type.name)
         if (to.numberSize !== NumberSize.INT) throw Errors.typeError(
           "str indices must be integers, not " + to.type.name)
-        var i = from.intValue(), j = from.intValue()
+        var i = from.intValue(), j = to.intValue()
         while (i < 0) i += self.strValue.length
         while (j < 0) j += self.strValue.length
         if (i > self.strValue.length) i = self.strValue.length
@@ -101,7 +101,9 @@ module Python {
           "replace args must be a str; got " + oldstr.type.name)
         if (newstr.strValue === undefined) throw Errors.typeError(
           "replace args must be a str; got " + newstr.type.name)
-        return new PyString(self.strValue.replace(oldstr.strValue, newstr.strValue))
+        var s1 = self.strValue, s2 = s1
+        while ((s2 = s1.replace(oldstr.strValue, newstr.strValue)) != s1) {s1 = s2}
+        return new PyString(s1)
       },
       rfind: (self: PyString, substr: PyString) => {
         if (substr.strValue === undefined) throw Errors.typeError(
